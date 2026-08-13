@@ -10,6 +10,7 @@ Collections:
 import os
 import time
 
+import certifi
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.operations import SearchIndexModel
@@ -22,7 +23,7 @@ _client: MongoClient | None = None
 def client() -> MongoClient:
     global _client
     if _client is None:
-        _client = MongoClient(os.environ["MONGODB_URI"])
+        _client = MongoClient(os.environ["MONGODB_URI"], tlsCAFile=certifi.where())
     return _client
 
 

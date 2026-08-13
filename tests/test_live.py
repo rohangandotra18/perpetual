@@ -28,7 +28,7 @@ class LiveAtlasSmoke(unittest.TestCase):
     def setUpClass(cls):
         from perpetual.db import db, index_queryable
         cls.db = db()
-        cls.index_queryable = index_queryable
+        cls._index_queryable = staticmethod(index_queryable)
 
     def test_ping_and_seeded_counts(self):
         d = self.db
@@ -41,7 +41,7 @@ class LiveAtlasSmoke(unittest.TestCase):
         d = self.db
         for coll, name in (("tools", "tools_vec"), ("messages", "messages_vec"),
                            ("skills", "skills_vec"), ("memories", "memories_vec")):
-            self.assertTrue(self.index_queryable(d[coll], name), f"{name} not queryable")
+            self.assertTrue(self._index_queryable(d[coll], name), f"{name} not queryable")
 
     def test_primitives_return_workplace_data(self):
         os.environ.setdefault("PERPETUAL_MOCK", "1")
