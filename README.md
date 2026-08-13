@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/perpetual-logo-wordmark.png" alt="Perpetual" width="560">
+</p>
+
 # Perpetual
 
 **An agent whose tool list is not code. It's a `$vectorSearch` result — over a collection the agent writes to itself.**
