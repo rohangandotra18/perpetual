@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "myelin": {
+    "perpetual": {
       "command": ".venv/bin/python",
-      "args": ["src/myelin/mcp_server.py"]
+      "args": ["src/perpetual/mcp_server.py"]
     }
   }
 }

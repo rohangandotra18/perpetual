@@ -33,7 +33,7 @@ def _embed_field(docs: list[dict], text_key: str, out_key: str = "embedding"):
 def reset(full: bool = True):
     d = db()
     names = ["people", "messages", "issues", "sent_messages", "style_profile",
-             "relations", "tools", "trajectories", "events"]
+             "relations", "tools", "trajectories", "events", "memories"]
     for n in names:
         d[n].delete_many({})
     print("collections cleared")

@@ -1,4 +1,4 @@
-"""Myelin MCP server — raw JSON-RPC over stdio, zero SDK dependencies.
+"""Perpetual MCP server — raw JSON-RPC over stdio, zero SDK dependencies.
 
 Serves the live `tools` collection into a Claude Code session. The tool list a model
 sees is literally a Mongo query result; when a macro is born (here via compile_ritual,
@@ -21,8 +21,8 @@ from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(ROOT / ".env")
 
-from myelin import macro, primitives  # noqa: E402
-from myelin.db import db  # noqa: E402
+from perpetual import macro, primitives  # noqa: E402
+from perpetual.db import db  # noqa: E402
 
 PROTOCOL = "2024-11-05"
 _write_lock = threading.Lock()
@@ -35,7 +35,7 @@ def send(msg: dict):
 
 
 def log(s: str):
-    print(f"[myelin-mcp] {s}", file=sys.stderr, flush=True)
+    print(f"[perpetual-mcp] {s}", file=sys.stderr, flush=True)
 
 
 def notify_tools_changed():
@@ -61,7 +61,7 @@ def mongo_tools() -> list[dict]:
 
 def call_tool(name: str, args: dict) -> str:
     if name == "compile_ritual":
-        from myelin import miner
+        from perpetual import miner
         born = miner.mine_and_compile()          # returns macro doc or None
         notify_tools_changed()                   # BEFORE returning — the race fix
         if born is not None:
@@ -106,7 +106,7 @@ def watch_external_births():
 
 def main():
     threading.Thread(target=watch_external_births, daemon=True).start()
-    log("myelin MCP server up")
+    log("perpetual MCP server up")
     for line in sys.stdin:
         line = line.strip()
         if not line:
@@ -120,7 +120,7 @@ def main():
             send({"jsonrpc": "2.0", "id": rid, "result": {
                 "protocolVersion": params.get("protocolVersion", PROTOCOL),
                 "capabilities": {"tools": {"listChanged": True}},
-                "serverInfo": {"name": "myelin", "version": "0.1.0"}}})
+                "serverInfo": {"name": "perpetual", "version": "0.1.0"}}})
         elif method == "tools/list":
             send({"jsonrpc": "2.0", "id": rid, "result": {"tools": mongo_tools()}})
         elif method == "tools/call":

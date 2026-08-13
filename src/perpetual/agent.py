@@ -6,8 +6,8 @@ tomorrow — becomes the function schema list handed to the model. Nothing else 
 hard-wired: growing the agent's abilities means inserting a document.
 
 Run:
-    PYTHONPATH=src python -m myelin.agent "send my weekly update to dana"
-    PYTHONPATH=src python -m myelin.agent "send my weekly update to dana" --agent-id agent-b
+    PYTHONPATH=src python -m perpetual.agent "send my weekly update to dana"
+    PYTHONPATH=src python -m perpetual.agent "send my weekly update to dana" --agent-id agent-b
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ TRANSCRIPT_LIMIT = 800  # chars of tool output shown to the model
 TERMINAL_TOOLS = {"send_message", "create_issue"}
 
 SYSTEM_PROMPT = (
-    "You are Myelin, an autonomous work agent operating on behalf of Maya (user id U_MAYA).\n"
+    "You are Perpetual, an autonomous work agent operating on behalf of Maya (user id U_MAYA).\n"
     "The tools you have been given were retrieved from a vector database for THIS task; "
     "they are your entire action space.\n"
     "Rules:\n"
@@ -188,11 +188,11 @@ def _bump(doc: dict | None, ok: bool):
 
 # ---------------------------------------------------------------- the run
 
-def run(task: str, agent_id: str = "agent-a", top_k: int = 8, max_steps: int = MAX_STEPS) -> dict:
+def run(task: str, agent_id: str = "agent-a", top_k: int = 12, max_steps: int = MAX_STEPS) -> dict:
     started = _now()
     t_run = time.time()
 
-    console.rule(f"[bold white]MYELIN[/bold white] [dim]·[/dim] [bold]{agent_id}[/bold]")
+    console.rule(f"[bold white]PERPETUAL[/bold white] [dim]·[/dim] [bold]{agent_id}[/bold]")
     console.print(f'[bold]task[/bold]  [italic]"{task}"[/italic]')
     console.print(f"[dim]mode  {'MOCK policy' if llm.mock_mode() else 'gemini ' + __import__('os').environ.get('GEMINI_MODEL', 'gemini-2.5-flash')}"
                   f"   db {db().name}[/dim]\n")
@@ -344,10 +344,10 @@ def run(task: str, agent_id: str = "agent-a", top_k: int = 8, max_steps: int = M
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="myelin.agent", description="Run the Myelin agent loop.")
+    ap = argparse.ArgumentParser(prog="perpetual.agent", description="Run the Perpetual agent loop.")
     ap.add_argument("task", help="natural-language task, e.g. 'send my weekly update to dana'")
     ap.add_argument("--agent-id", default="agent-a")
-    ap.add_argument("--top-k", type=int, default=8, help="tools retrieved from Atlas")
+    ap.add_argument("--top-k", type=int, default=12, help="tools retrieved from Atlas")
     ap.add_argument("--max-steps", type=int, default=MAX_STEPS)
     a = ap.parse_args()
     out = run(a.task, agent_id=a.agent_id, top_k=a.top_k, max_steps=a.max_steps)

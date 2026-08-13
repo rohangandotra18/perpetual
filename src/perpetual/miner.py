@@ -1,6 +1,6 @@
 """The miner: find the ritual, compile it into a tool.
 
-This is the part of Myelin that turns *behavior* into *capability*.
+This is the part of Perpetual that turns *behavior* into *capability*.
 
   1. MINE  — a real MongoDB aggregation over `trajectories`:
              $match success -> $unwind steps -> $setWindowFields (sliding window of N
@@ -18,7 +18,7 @@ This is the part of Myelin that turns *behavior* into *capability*.
              7 -> 8) and emit an `events` doc that the change stream delivers to
              Agent B.
 
-Run:  PYTHONPATH=src python -m myelin.miner [--dry-run]
+Run:  PYTHONPATH=src python -m perpetual.miner [--dry-run]
 """
 from __future__ import annotations
 
@@ -274,7 +274,7 @@ def _print_candidates(candidates: list[dict], winners: list[dict]):
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="myelin.miner")
+    ap = argparse.ArgumentParser(prog="perpetual.miner")
     ap.add_argument("--dry-run", action="store_true",
                     help="mine and print candidates without compiling or inserting")
     ap.add_argument("--min-support", type=int, default=MIN_SUPPORT)
@@ -283,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     d = db()
     before = d.tools.count_documents({})
 
-    console.rule("[bold cyan]MYELIN MINER[/bold cyan]")
+    console.rule("[bold cyan]PERPETUAL MINER[/bold cyan]")
     console.print(f"[dim]db={d.name}  trajectories={d.trajectories.count_documents({})}  "
                   f"tools={before}  min_support={args.min_support}[/dim]\n")
 

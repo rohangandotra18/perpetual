@@ -11,7 +11,7 @@ Transport:
              e.g. a non-replica-set tier)
 
 Run:
-    PYTHONPATH=src python -m myelin.watcher [--agent-id agent-b]
+    PYTHONPATH=src python -m perpetual.watcher [--agent-id agent-b]
 """
 from __future__ import annotations
 
@@ -304,7 +304,7 @@ class Watcher:
 
     def run(self):
         tools = self.bootstrap()
-        print_boot(self.agent_id, tools, os.environ.get("MYELIN_DB", "myelin"))
+        print_boot(self.agent_id, tools, os.environ.get("PERPETUAL_DB", "perpetual"))
 
         cs, err = _open_change_stream(self.coll)
         if cs is not None:
@@ -351,7 +351,7 @@ class Watcher:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="myelin.watcher", description="Agent B — skill inheritance watcher")
+    ap = argparse.ArgumentParser(prog="perpetual.watcher", description="Agent B — skill inheritance watcher")
     ap.add_argument("--agent-id", default="agent-b")
     ap.add_argument("--poll", action="store_true", help="force the poll transport (skip change stream)")
     args = ap.parse_args(argv)

@@ -1,6 +1,6 @@
 """LLM client: OpenRouter (openai-compatible) with a deterministic mock mode.
 
-Mock mode (MYELIN_MOCK=1 or no key) lets the entire pipeline — retrieval, trajectory
+Mock mode (PERPETUAL_MOCK=1 or no key) lets the entire pipeline — retrieval, trajectory
 logging, mining, macro birth, skill transfer — run end-to-end offline. The mock policy
 performs the weekly-update ritual the same way the real model does.
 """
@@ -17,7 +17,7 @@ GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai"
 
 
 def mock_mode() -> bool:
-    return os.environ.get("MYELIN_MOCK") == "1" or not os.environ.get("GEMINI_API_KEY")
+    return os.environ.get("PERPETUAL_MOCK") == "1" or not os.environ.get("GEMINI_API_KEY")
 
 
 def chat(messages: list[dict], tools: list[dict] | None = None,

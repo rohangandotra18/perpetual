@@ -113,7 +113,7 @@ def send_message(to: str, subject: str, body=None) -> dict:
     text = body if isinstance(body, str) else LAST_DRAFT["text"] or ""
     db().sent_messages.insert_one({
         "user_id": ME, "kind": "weekly_update", "to": to, "subject": subject,
-        "body": text, "sent_at": dt.datetime.utcnow().isoformat(), "authored_by": "myelin"})
+        "body": text, "sent_at": dt.datetime.utcnow().isoformat(), "authored_by": "perpetual"})
     return {"sent": True, "to": to, "chars": len(text)}
 
 
@@ -128,13 +128,31 @@ def create_issue(title: str, body: str = "", assignee: str | None = None) -> dic
                             "assignee_id": assignee, "created_by": ME,
                             "created_at": dt.datetime.utcnow().isoformat(),
                             "closed_at": None, "source_message_id": None,
-                            "authored_by": "myelin"})
+                            "authored_by": "perpetual"})
     return {"key": key, "url": f"local://issues/{key}"}
+
+
+def save_to_memory(content: str, topic: str = "general") -> dict:
+    """Persist a decision/spec/preference into long-term memory in Atlas."""
+    vecs = embed.embed([f"{topic}: {content}"])
+    doc = {"kind": "memory", "topic": topic, "content": content,
+           "saved_at": dt.datetime.utcnow().isoformat()}
+    if vecs is not None:
+        doc["embedding"] = vecs[0]
+    db().memories.insert_one(doc)
+    return {"saved": True, "topic": topic, "chars": len(content)}
+
+
+def recall_memory(query: str, limit: int = 3) -> dict:
+    docs = _vector_query("memories", "memories_vec", "embedding", query, limit)
+    return {"memories": [{"topic": m.get("topic"), "content": m.get("content"),
+                          "saved_at": m.get("saved_at")} for m in docs]}
 
 
 REGISTRY = {f.__name__: f for f in (
     search_slack, list_my_issues, who_did_i_delegate,
-    get_voice_profile, draft_message, send_message, create_issue)}
+    get_voice_profile, draft_message, send_message, create_issue,
+    save_to_memory, recall_memory)}
 
 PRIMITIVE_DOCS = [
     {"name": "search_slack", "purpose": "Search the team Slack history for messages about a topic, a person, or recent work.",
@@ -151,4 +169,8 @@ PRIMITIVE_DOCS = [
      "params_schema": {"type": "object", "properties": {"to": {"type": "string"}, "subject": {"type": "string"}, "body": {"type": "string"}}, "required": ["to", "subject"]}},
     {"name": "create_issue", "purpose": "File a new issue in the tracker with a title, body, and optional assignee.",
      "params_schema": {"type": "object", "properties": {"title": {"type": "string"}, "body": {"type": "string"}, "assignee": {"type": "string"}}, "required": ["title"]}},
+    {"name": "save_to_memory", "purpose": "Persist a decision, design spec, preference, or fact from this conversation into my permanent long-term memory (MongoDB Atlas), so future sessions start already knowing it. Use whenever the user says 'save this', 'remember this', or 'save to memory'. Pass a complete, specific summary as content — exact values, names, numbers.",
+     "params_schema": {"type": "object", "properties": {"content": {"type": "string"}, "topic": {"type": "string"}}, "required": ["content"]}},
+    {"name": "recall_memory", "purpose": "Semantic search over my permanent long-term memory from past sessions — decisions, specs, preferences, facts. ALWAYS check this FIRST when the user references anything previously discussed ('the button we designed', 'what we decided', 'like last time') — my conversation context does not survive between sessions, but this memory does.",
+     "params_schema": {"type": "object", "properties": {"query": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["query"]}},
 ]

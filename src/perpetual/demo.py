@@ -1,8 +1,8 @@
-"""MYELIN demo conductor — the operator's console for the three demo beats.
+"""PERPETUAL demo conductor — the operator's console for the three demo beats.
 
-    PYTHONPATH=src python -m myelin.demo reset        # known-good --warm state
-    PYTHONPATH=src python -m myelin.demo status       # tools known / trajectories / events
-    PYTHONPATH=src python -m myelin.demo birth-check  # is the ritual at support 2 or 3?
+    PYTHONPATH=src python -m perpetual.demo reset        # known-good --warm state
+    PYTHONPATH=src python -m perpetual.demo status       # tools known / trajectories / events
+    PYTHONPATH=src python -m perpetual.demo birth-check  # is the ritual at support 2 or 3?
 
 Color language: cyan = info, green = success, magenta = birth / skill.
 """
@@ -44,7 +44,7 @@ def header(title: str, subtitle: str = "", style: str = INFO):
             *([Text(subtitle, style=DIM, justify="center")] if subtitle else []),
         ),
         border_style=style, padding=(1, 2),
-        subtitle=f"[{DIM}]db={os.environ.get('MYELIN_DB', 'myelin')}[/]",
+        subtitle=f"[{DIM}]db={os.environ.get('PERPETUAL_DB', 'perpetual')}[/]",
     ))
     console.print()
 
@@ -82,7 +82,7 @@ def tool_docs() -> list[dict]:
 
 # ── subcommands ───────────────────────────────────────────────────────────────
 def cmd_reset(_args) -> int:
-    header("MYELIN — RESET", "rebuilding the known-good --warm state", INFO)
+    header("PERPETUAL — RESET", "rebuilding the known-good --warm state", INFO)
     console.print(f"[{INFO}]ensuring collections + indexes (tools_vec, messages_vec)…[/]")
     ensure_indexes()
     console.print(f"[{OK}]✓ indexes ensured[/]")
@@ -120,7 +120,7 @@ def cmd_reset(_args) -> int:
 
 
 def cmd_status(_args) -> int:
-    header("MYELIN — STATUS", "the agent's action space is a collection", INFO)
+    header("PERPETUAL — STATUS", "the agent's action space is a collection", INFO)
     d = db()
     tools = tool_docs()
     prims = [t for t in tools if t.get("kind") == "primitive"]
@@ -190,7 +190,7 @@ def cmd_status(_args) -> int:
 
 
 def cmd_birth_check(_args) -> int:
-    header("MYELIN — BIRTH CHECK", "is the ritual ripe for compilation?", BIRTH)
+    header("PERPETUAL — BIRTH CHECK", "is the ritual ripe for compilation?", BIRTH)
     support, hits = ritual_support()
 
     rt = Table(show_header=True, header_style=f"bold {DIM}", box=None, padding=(0, 2))
@@ -248,7 +248,7 @@ def cmd_birth_check(_args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="myelin.demo", description="MYELIN demo conductor")
+    ap = argparse.ArgumentParser(prog="perpetual.demo", description="PERPETUAL demo conductor")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("reset", help="seed.reset() + ensure_indexes(); print counts (--warm state)")
     sub.add_parser("status", help="TOOLS KNOWN, trajectory count, last 3 events")

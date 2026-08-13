@@ -1,10 +1,10 @@
-# Myelin
+# Perpetual
 
 **An agent whose tool list is not code. It's a `$vectorSearch` result — over a collection the agent writes to itself.**
 
 Every agent you have used ships with a fixed tool list. Someone typed those functions into a file. The agent will have exactly those tools on day 1 and on day 400. It does the same six-step chore every Thursday and it is exactly as slow on the fiftieth Thursday as on the first.
 
-Myelin removes the file. Tools live in a MongoDB collection. At every reasoning step the agent asks Atlas Vector Search *"what can I do about this?"* and the top-k hits become its action space for that turn. That means the action space is writable — and Myelin writes to it. A miner reads the agent's own execution logs, finds action sequences that keep repeating and keep succeeding, and compiles them into a new named tool. The agent's tool count goes up while it is running.
+Perpetual removes the file. Tools live in a MongoDB collection. At every reasoning step the agent asks Atlas Vector Search *"what can I do about this?"* and the top-k hits become its action space for that turn. That means the action space is writable — and Perpetual writes to it. A miner reads the agent's own execution logs, finds action sequences that keep repeating and keep succeeding, and compiles them into a new named tool. The agent's tool count goes up while it is running.
 
 Then a second agent, in a second terminal, picks up that tool through a change stream — seconds later, no restart, no deploy.
 
@@ -16,9 +16,9 @@ Then a second agent, in a second terminal, picks up that tool through a change s
 
 The pitch in one line: *the second time should be cheaper than the first, and every other agent should get the discount.*
 
-Today, agent improvement means retraining a model or a human editing a prompt. Both are offline, slow, and centralized. Myelin does it online and in the data layer:
+Today, agent improvement means retraining a model or a human editing a prompt. Both are offline, slow, and centralized. Perpetual does it online and in the data layer:
 
-| | Cold agent | Myelin, after one afternoon of work |
+| | Cold agent | Perpetual, after one afternoon of work |
 |---|---|---|
 | Weekly update to boss | 6 tool calls, ~25s, ~9k tokens of reasoning | 1 tool call, ~5s, ~600 tokens |
 | Where the skill lives | model weights / prompt file | a document in `tools` |
@@ -107,7 +107,7 @@ That's the whole hand-written action space. Everything above it, the agent build
 
 ## The macro format
 
-A macro is a **declarative linear step list with `$ref` parameter bindings**. It is readable JSON. There is no code generation and no `exec()` — the executor is ~40 lines that resolve refs and call primitives (`src/myelin/macro.py`). This matters: a tool an agent wrote is a tool you can read before it runs.
+A macro is a **declarative linear step list with `$ref` parameter bindings**. It is readable JSON. There is no code generation and no `exec()` — the executor is ~40 lines that resolve refs and call primitives (`src/perpetual/macro.py`). This matters: a tool an agent wrote is a tool you can read before it runs.
 
 Here is the real document born on stage, compiled from the 6-step ritual Maya keeps doing every Thursday:
 
@@ -157,7 +157,7 @@ The LLM's only job in compilation is **naming and writing the `purpose`** (via O
 
 Being straight about it, because a demo that lies is worthless:
 
-**Seeded (fictional, deterministic):** the entire workplace. Maya Chen, staff engineer at "Northwind Payments"; her manager Dana Okafor (`U_DANA`); John Diaz (`U_JOHN`), whom she delegates to; plus a few more colleagues. `messages` is a **Slack-export-shaped** corpus (same `channel` / `user` / `ts` / `text` / `thread_ts` fields a real `export.json` gives you), `issues` mirror a tracker, `sent_messages` is her voice corpus. **No OAuth, no live Slack, no live GitHub** — a deliberate call for a 3.5-hour build. Swapping in a real Slack export is a **loader change**, not an architecture change: point `myelin.seed` at the export directory and the same shape lands in the same collection.
+**Seeded (fictional, deterministic):** the entire workplace. Maya Chen, staff engineer at "Northwind Payments"; her manager Dana Okafor (`U_DANA`); John Diaz (`U_JOHN`), whom she delegates to; plus a few more colleagues. `messages` is a **Slack-export-shaped** corpus (same `channel` / `user` / `ts` / `text` / `thread_ts` fields a real `export.json` gives you), `issues` mirror a tracker, `sent_messages` is her voice corpus. **No OAuth, no live Slack, no live GitHub** — a deliberate call for a 3.5-hour build. Swapping in a real Slack export is a **loader change**, not an architecture change: point `perpetual.seed` at the export directory and the same shape lands in the same collection.
 
 **Live (real, happening in front of you):** everything that makes this a project rather than a mockup. Real Atlas cluster. Real `$vectorSearch` retrieval choosing the tool list every turn. Real aggregation mining over the trajectories that were just written. Real macro document inserted at runtime. Real change stream delivering it to a second process. Real TTL and fitness counters. Real LLM calls. Nothing about the learning loop is faked or pre-baked — reset the database and it happens again from zero.
 
@@ -168,27 +168,27 @@ Being straight about it, because a demo that lies is worthless:
 Requires an **Atlas** cluster (Vector Search, change streams and TTL are all Atlas/replica-set features — a standalone `mongod` will not do).
 
 ```bash
-git clone <this repo> && cd myelin
+git clone <this repo> && cd perpetual
 
 uv venv && source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .                       # puts src/myelin on the path
+pip install -e .                       # puts src/perpetual on the path
 
 cp .env.example .env                   # MONGODB_URI + OPENROUTER_API_KEY required
                                        # FIREWORKS / ELEVENLABS / VOYAGE optional
 
-python -m myelin.db                    # create collections + vector indexes, wait until queryable
-python -m myelin.seed                  # load the Northwind Payments workplace + 7 primitives
+python -m perpetual.db                    # create collections + vector indexes, wait until queryable
+python -m perpetual.seed                  # load the Northwind Payments workplace + 7 primitives
 ```
 
 Two terminals, side by side:
 
 ```bash
 # terminal 1 — the agent that does the work
-python -m myelin.demo agent-a
+python -m perpetual.demo agent-a
 
 # terminal 2 — the agent that inherits the skill
-python -m myelin.demo agent-b
+python -m perpetual.demo agent-b
 ```
 
 Terminal 1 runs the ritual cold, mines it, compiles `weekly_update_to_dana`, watches `TOOLS KNOWN` tick 7 → 8, then runs it warm as one call. Terminal 2 never restarts and gains the tool anyway.

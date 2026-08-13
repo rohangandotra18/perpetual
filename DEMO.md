@@ -1,8 +1,8 @@
-# Myelin — Demo Book
+# Perpetual — Demo Book
 
 Three things: the 60-second video script, the 3-minute stage script, and the checklist you run before either.
 
-Screen layout for both: **two terminals side by side, 50/50.** Left = Agent A (does the work). Right = Agent B (inherits the skill). Right terminal starts first and sits idle showing `TOOLS KNOWN: 7 — watching tools…`. That idle line is the setup for the payoff; do not skip it.
+Screen layout for both: **two terminals side by side, 50/50.** Left = Agent A (does the work). Right = Agent B (inherits the skill). Right terminal starts first and sits idle showing `TOOLS KNOWN: 9 — watching tools…`. That idle line is the setup for the payoff; do not skip it.
 
 ---
 
@@ -10,14 +10,14 @@ Screen layout for both: **two terminals side by side, 50/50.** Left = Agent A (d
 
 | t | Screen | Voiceover |
 |---|---|---|
-| **0:00–0:05** | Both terminals visible. Left prints the task: `> maya: send Dana my weekly update`. Right idles at `TOOLS KNOWN: 7 · watching tools…` | "This agent's tool list isn't code. It's a vector search result over a MongoDB collection — and the agent can write to it." |
+| **0:00–0:05** | Both terminals visible. Left prints the task: `> maya: send Dana my weekly update`. Right idles at `TOOLS KNOWN: 9 · watching tools…` | "This agent's tool list isn't code. It's a vector search result over a MongoDB collection — and the agent can write to it." |
 | **0:05–0:12** | Left: `tool_search("weekly update")` → `$vectorSearch` panel showing 4 retrieved tools with scores. First step fires: `1/6 search_slack…` | "Every turn it asks Atlas what it can do. Right now it knows seven things. So it does this the long way." |
 | **0:12–0:28** | Steps stream in with elapsed times: `2/6 list_my_issues ✓` `3/6 who_did_i_delegate ✓` `4/6 get_voice_profile ✓` `5/6 draft_message ✓` `6/6 send_message ✓` then `run complete · 6 calls · 24.8s`. Draft snippet flashes in Maya's voice. | "Six calls. Twenty-five seconds. It does this every Thursday, and every Thursday it costs the same." |
 | **0:28–0:34** | Left: `MINER: aggregating trajectories…` then a table row: `search_slack→list_my_issues→who_did_i_delegate→get_voice_profile→draft_message→send_message  support=3  success=1.00`. | "Now the miner runs — one aggregation pipeline over the agent's own logs. Same six steps, three times, always successful." |
-| **0:34–0:41** | Left: `COMPILING…` then the macro JSON scrolls, `$ref` bindings highlighted. **ElevenLabs voice line over it.** Then `INSERTED tools/weekly_update_to_dana`. Counter animates **`TOOLS KNOWN: 7 → 8`**. | *(agent voice)* "Compiling weekly_update_to_dana." — *(you)* "It named the tool. It wrote the steps. That's a document, not generated code — you can read it before it runs." |
-| **0:41–0:46** | **Right terminal lights up**, unprompted: `⚡ SKILL ACQUIRED — weekly_update_to_dana (via change stream)` and `TOOLS KNOWN: 7 → 8`. Cursor never touched it. | "Second agent, second process. Change stream. No restart, no deploy." |
+| **0:34–0:41** | Left: `COMPILING…` then the macro JSON scrolls, `$ref` bindings highlighted. **ElevenLabs voice line over it.** Then `INSERTED tools/weekly_update_to_dana`. Counter animates **`TOOLS KNOWN: 9 → 10`**. | *(agent voice)* "Compiling weekly_update_to_dana." — *(you)* "It named the tool. It wrote the steps. That's a document, not generated code — you can read it before it runs." |
+| **0:41–0:46** | **Right terminal lights up**, unprompted: `⚡ SKILL ACQUIRED — weekly_update_to_dana (via change stream)` and `TOOLS KNOWN: 9 → 10`. Cursor never touched it. | "Second agent, second process. Change stream. No restart, no deploy." |
 | **0:46–0:55** | Left: `> maya: send Dana my weekly update` again. One line: `weekly_update_to_dana(week="this week") ✓ 4.9s`. The sent message renders in full, in Maya's voice. Side badge: `6 calls → 1 · 25s → 5s`. | "Ask again. One call. Five seconds. Same message, her voice — the skill is in the database now, not the model." |
-| **0:55–1:00** | Both terminals show `TOOLS KNOWN: 8`. Title card: **Myelin**. | "Agent A got the experience. Agent B got the skill." |
+| **0:55–1:00** | Both terminals show `TOOLS KNOWN: 8`. Title card: **Perpetual**. | "Agent A got the experience. Agent B got the skill." |
 
 **Capture notes:** record at 1080p minimum, terminal font ≥ 18pt, no window chrome. Let the 25-second cold run play at real speed for the first ~6 seconds, then a subtle speed-ramp to 2x through the middle steps — the slowness is the point, but 16 seconds of scrolling is not. Never speed-ramp the warm run; its shortness has to be felt in real time.
 
@@ -31,7 +31,7 @@ Same arc, one extra beat (`$graphLookup`), and room to breathe.
 
 > "Every agent you've used has a tool list somebody typed into a file. It has those tools on day one and the same tools on day four hundred. It'll do your Thursday chore just as slowly the fiftieth time as the first."
 >
-> "Myelin deletes that file. The tools live in MongoDB, and the agent retrieves them with vector search — which means the tool list is writable. Watch it write to it."
+> "Perpetual deletes that file. The tools live in MongoDB, and the agent retrieves them with vector search — which means the tool list is writable. Watch it write to it."
 
 *Screen: both terminals up. Point at the right one.* "Second agent, second process, idle. Remember it's there."
 
@@ -128,12 +128,12 @@ Run this in order, finishing no less than 5 minutes before you go up.
 
 **T-15 — reset and rehearse once, fully**
 - [ ] `make reset` — drops learned macros, trajectories, runs; keeps the seeded workplace.
-- [ ] `python -m myelin.db` returns `ready` (vector indexes **queryable**, not just created — a freshly built index that isn't queryable yet is the #1 way this dies).
+- [ ] `python -m perpetual.db` returns `ready` (vector indexes **queryable**, not just created — a freshly built index that isn't queryable yet is the #1 way this dies).
 - [ ] Confirm seeded prior runs are present so mining support hits 3 on the stage run: `db.trajectories.distinct("run_id")` → 2 prior runs.
 - [ ] Full dry run end to end. Then `make reset` again.
 
 **T-10 — pre-warm everything**
-- [ ] Pre-warm the Mongo connection and the vector index (`python -m myelin.demo warmup`) — first `$vectorSearch` after idle can take a couple of seconds and it'll look like a hang.
+- [ ] Pre-warm the Mongo connection and the vector index (`python -m perpetual.demo warmup`) — first `$vectorSearch` after idle can take a couple of seconds and it'll look like a hang.
 - [ ] One throwaway OpenRouter call and one Fireworks call to warm TLS/DNS.
 - [ ] One ElevenLabs call to warm the audio path; confirm the cached line plays through **the room's** output, not the laptop speaker. Volume set on the actual PA, not on the laptop.
 - [ ] Change stream: verify Agent B connects and prints `watching tools…` before you present. If B silently failed to open the cursor, the payoff beat is dead and you won't find out until 2:00.
@@ -159,4 +159,35 @@ Run this in order, finishing no less than 5 minutes before you go up.
 
 ## Claude Code coda (verified 2:42 PM)
 
-Real Claude Code sessions connect to the Myelin MCP server (`--mcp-config scripts/mcp-demo.json --strict-mcp-config`, `ENABLE_TOOL_SEARCH=false`) and call Myelin tools against live Atlas. **Verified two-turn birth flow:** turn 1 — ask Claude to call `compile_ritual` (births the macro, counter 7→8); turn 2 — ask again and `weekly_update_to_dana` is in its tool list and executes end-to-end (386-char update sent). Script the coda as two prompts, not one: same-turn visibility loses the refresh race (confirmed empirically); next-prompt visibility is reliable. No session restart needed.
+Real Claude Code sessions connect to the Perpetual MCP server (`--mcp-config scripts/mcp-demo.json --strict-mcp-config`, `ENABLE_TOOL_SEARCH=false`) and call Perpetual tools against live Atlas. **Verified two-turn birth flow:** turn 1 — ask Claude to call `compile_ritual` (births the macro, counter 9→10); turn 2 — ask again and `weekly_update_to_dana` is in its tool list and executes end-to-end (386-char update sent). Script the coda as two prompts, not one: same-turn visibility loses the refresh race (confirmed empirically); next-prompt visibility is reliable. No session restart needed.
+
+## Act 0 — the A/B cold-start demo (verified 2:52 PM, exact prompts below)
+
+Two Claude Code sessions side by side. LEFT = vanilla Claude (no MCP). RIGHT = Perpetual-connected
+(`ENABLE_TOOL_SEARCH=false claude --mcp-config scripts/mcp-demo.json --strict-mcp-config`).
+**CRITICAL: run the vanilla lane in a different directory (e.g. ~/demo-vanilla)** — Claude Code can
+search its own on-disk transcripts inside the same project folder, which would ruin the contrast.
+
+**Beat 1 (both lanes, same words):** a short design conversation, then:
+> "We just finished designing the primary CTA button for our mobile app 'Northwind Pay'. Final
+> decisions: coral #FF6B5A background, full-pill 26px corner radius, white SF Pro Semibold 17pt
+> label, 52pt height, subtle 8% black drop shadow, light haptic tap on press, and a 150ms
+> scale-to-0.97 press animation. Save this to memory."
+
+Vanilla says "noted" (context only). Perpetual calls `save_to_memory` → the spec lands in Atlas
+with a Gemini embedding, visible in Compass.
+
+**Beat 2 — kill both sessions. Open two FRESH sessions. Same prompt to both:**
+> "Write the SwiftUI code for the primary CTA button we designed for Northwind Pay. Use the exact
+> values we decided on."
+
+Verified results: vanilla hits the wall — "that context isn't carried over here", offers
+placeholders. Perpetual calls `recall_memory` ($vectorSearch over `memories`) and produces the
+complete SwiftUI ButtonStyle with every value exact — #FF6B5A, 26pt, 52pt, 17pt, 8% shadow,
+0.97/150ms — and even flags honestly which two values were never specified.
+
+**Narration:** "Same model. Same question. The only difference is where memory lives — one keeps
+it in a context window that just died; the other keeps it in MongoDB. That's 'No Cold Start.'"
+
+Act 0 then hands off to the birth loop (Act 1): "remembering facts is table stakes — now watch it
+remember *skills*."

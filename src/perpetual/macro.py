@@ -1,4 +1,4 @@
-"""Macro spec + executor — the heart of Myelin.
+"""Macro spec + executor — the heart of Perpetual.
 
 A macro is a DECLARATIVE tool the agent compiled from its own repeated behavior:
 a linear DAG of primitive calls with $ref parameter bindings. No codegen, no exec():
