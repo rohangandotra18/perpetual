@@ -18,7 +18,7 @@ Macro document shape (lives in the `tools` collection, kind="macro"):
     {"tool": "send_message",  "params": {"to": "boss", "body": {"$ref": "s3.text"}}}
   ],
   "guard": null,                    # optional {"$ref": ..., "equals": ...} precondition
-  "stats": {"invocations": 0, "successes": 0},
+  "fitness": {"calls": 0, "successes": 0},
   "born_at": ..., "born_from_run": ..., "expires_at": ...
 }
 """

@@ -1,7 +1,7 @@
 .PHONY: reset demo warmup
 
 export PYTHONPATH := src
-PYTHON ?= python3
+PYTHON ?= $(firstword $(wildcard .venv/bin/python) python3)
 
 reset:
 	$(PYTHON) -m perpetual.demo reset

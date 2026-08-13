@@ -96,19 +96,19 @@ flowchart TB
 Not decoration. Remove any one of these and the demo stops working.
 
 **1. Atlas Vector Search on `tools.purpose` — *the tool list IS a query result***
-This is the whole thesis. `tool_search(intent)` runs `$vectorSearch` against `tools.purpose_embedding` with `kind`/`status` filters and returns the top-k tools as the model's function schema for that turn. Because retrieval is the binding mechanism, a newly inserted document is *immediately* a callable tool — no registry reload, no restart, no code. Automated Embeddings keeps `purpose` and its vector in sync on write (Voyage fallback path via `VOYAGE_API_KEY` when the sandbox tier lacks it). We also vector-index `messages.text` so "what did we say about reconciliation" is semantic, not keyword.
+This is the whole thesis. `tool_search(intent)` runs `$vectorSearch` against `tools.purpose_embedding` with `kind`/`status` filters and returns the top-k tools as the model's function schema for that turn. Because retrieval is the binding mechanism, a newly inserted document is *immediately* a callable tool — no registry reload, no restart, no code. Embeddings are written client-side with `gemini-embedding-001` (`EMBED_PROVIDER=gemini`), hashed locally for offline demos (`fake`), or left to Atlas Automated Embeddings (`auto`). We also vector-index `messages.embedding` so "what did we say about reconciliation" is semantic, not keyword.
 
 **2. Aggregation framework as the miner — *learning is a pipeline***
-`trajectories` stores one document per executed step (`run_id`, `step`, `tool`, `params`, `ok`). The miner is an aggregation: `$sort` by step → `$group` per run into an ordered tool array → `$project` sliding n-grams (n = 3..8) → `$unwind` → `$group` by the n-gram with `support` and `success_rate` → `$match` support ≥ 3 and success_rate = 1.0. No ML, no external job runner. Behavior mining is a database query, which is why it can run mid-demo in under a second.
+`trajectories` stores one document per executed *run* (`steps[]` with `tool`, `args`, `ok`). The miner is an aggregation: `$match` success → `$unwind` steps → `$setWindowFields` sliding n-grams of consecutive tool names (n = 6, then 5, then 4) → `$group` by the window with `support` = distinct trajectories → `$match` support ≥ 3. No ML, no external job runner. Behavior mining is a database query, which is why it can run mid-demo in under a second.
 
 **3. `$graphLookup` over `relations` — *the workplace graph***
-People, projects, issues and channels are nodes in `entities`; `relations` holds typed edges (`delegated_to`, `owns`, `reports_to`, `mentioned_in`). `who_did_i_delegate(topic)` is a `$graphLookup` from Maya out through `delegated_to` edges up to depth 3, so "who did I hand the reconciliation work to?" resolves to John Diaz *and* the issue he opened downstream — a multi-hop answer a flat lookup can't give.
+People are nodes in `people`; `relations` holds typed edges (`delegated_to`, `asked_help_of`). `who_did_i_delegate(topic)` is a `$graphLookup` from Maya out through those edges up to depth 2, so "who did I hand the reconciliation work to?" resolves to John Diaz *and* anyone he pulled in — a multi-hop answer a flat lookup can't give.
 
 **4. Change streams — *skill transfer***
 Agent B runs `db.tools.watch([{ $match: { operationType: "insert", "fullDocument.kind": "macro" }}])`. The macro document is fully self-describing (steps + bindings + purpose), so B doesn't fetch code — it receives the tool. On stage, B's terminal prints `SKILL ACQUIRED: weekly_update_to_dana` while A's insert cursor is still warm. This is the moment the demo exists for.
 
 **5. TTL + fitness counters — *bad tools die***
-Every macro carries `expires_at` (a BSON Date, so Atlas TTL can actually delete it) and `fitness {calls, successes}`. Neglect lets Mongo's TTL monitor delete it. A macro whose success rate falls below threshold can be demoted to `status: "quarantined"`, which the vector index filters out — it stops being retrievable, therefore stops being a tool.
+Every macro carries `expires_at` (a BSON Date, so Atlas TTL can actually delete it) and `fitness {calls, successes}`. Neglect lets Mongo's TTL monitor delete it. Fitness is incremented on every invocation; `status` is a filter field on the vector index, so a later quarantine pass would make a loser unretrievable — and therefore not a tool.
 
 **6. Durability is the trajectory log, not a second graph store**
 The agent loop is a Python `for` over tool calls in `src/perpetual/agent.py`. Every step is appended to `trajectories` in the same cluster. LangGraph `MongoDBSaver` is a listed dependency for a later checkpointer — it is not the loop that runs on stage.
@@ -119,14 +119,14 @@ The agent loop is a Python `for` over tool calls in `src/perpetual/agent.py`. Ev
 |---|---|
 | `tools` | 9 primitives + every macro the agent compiles. Vector index on `purpose_embedding`. TTL on `expires_at`. |
 | `trajectories` | one doc per executed run (`steps[]`); the miner's input |
-| `runs` | run outcomes, feeds fitness |
-| `entities` / `relations` | workplace graph nodes and edges (`$graphLookup`) |
+| `people` / `relations` | workplace graph nodes and edges (`$graphLookup`) |
 | `skills` | operating instructions as documents (`skills_vec`); retrieved by the prompt hook, never called by name |
 | `memories` | saved decisions, specs and conventions (`memories_vec`); retrieved the same way |
-| `messages` | Slack-export-shaped workplace history, vector-indexed on `text` |
+| `messages` | Slack-export-shaped workplace history, vector-indexed on `embedding` |
 | `issues` | tracker items assigned to / opened by Maya |
 | `sent_messages` | Maya's voice corpus — things she actually wrote |
 | `style_profile` | distilled tone rules derived from `sent_messages` |
+| `events` | `tool_born` (and similar) — what Agent B's change stream is watching |
 
 ### The nine primitives
 
@@ -208,8 +208,7 @@ Requires an **Atlas** cluster (Vector Search, change streams and TTL are all Atl
 git clone <this repo> && cd perpetual
 
 uv venv && source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .                       # puts src/perpetual on the path
+pip install -e .                       # deps from pyproject.toml + puts src/perpetual on the path
 
 cp .env.example .env                   # MONGODB_URI + GEMINI_API_KEY required
                                        # ELEVENLABS optional; EMBED_PROVIDER=fake works offline

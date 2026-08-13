@@ -100,7 +100,7 @@ def cmd_reset(_args) -> int:
     t.add_column("collection", style="bold")
     t.add_column("docs", justify="right", style=INFO)
     for name in ("people", "messages", "issues", "sent_messages", "style_profile",
-                 "relations", "trajectories", "tools", "events"):
+                 "relations", "trajectories", "tools", "skills", "memories", "events"):
         t.add_row(name, str(d[name].count_documents({})))
     console.print(t)
     console.print()
@@ -247,6 +247,14 @@ def cmd_birth_check(_args) -> int:
     return 0
 
 
+def _index_queryable(coll, idx_name: str) -> bool:
+    """True only if Atlas reports this search index as queryable — not a collection scan."""
+    for info in coll.list_search_indexes():
+        if info.get("name") == idx_name:
+            return bool(info.get("queryable"))
+    return False
+
+
 def cmd_warmup(_args) -> int:
     header("PERPETUAL — WARMUP", "ping Atlas + vector indexes", INFO)
     from . import primitives
@@ -257,14 +265,44 @@ def cmd_warmup(_args) -> int:
         ("tools_vec", "tools", "purpose_embedding", "weekly update", {"status": "active"}),
         ("skills_vec", "skills", "embedding", "button", None),
         ("memories_vec", "memories", "embedding", "button spec", None),
+        ("messages_vec", "messages", "embedding", "ledger", None),
     ]
+    failed = 0
     for idx, coll, path, q, flt in probes:
         try:
-            hits = primitives._vector_query(coll, idx, path, q, 3, flt)
+            if not _index_queryable(d[coll], idx):
+                console.print(f"[yellow]! {idx} not queryable yet[/]")
+                failed += 1
+                continue
+        except Exception as e:
+            console.print(f"[yellow]! {idx}: cannot list indexes ({type(e).__name__}: {e})[/]")
+            failed += 1
+            continue
+        try:
+            qv = primitives._query_vector(q)
+        except Exception as e:
+            console.print(f"[{OK}]✓ {idx} queryable[/] [yellow]! embed failed ({type(e).__name__}: {e})[/]")
+            continue
+        if qv is None:
+            console.print(f"[{OK}]✓ {idx} queryable[/] [{DIM}](no client vector — EMBED_PROVIDER=auto)[/]")
+            continue
+        try:
+            stage = {"$vectorSearch": {"index": idx, "path": path, "queryVector": qv,
+                                       "numCandidates": 8, "limit": 3}}
+            if flt:
+                stage["$vectorSearch"]["filter"] = flt
+            hits = list(d[coll].aggregate([stage]))
             console.print(f"[{OK}]✓ {idx} queryable ({len(hits)} hits)[/]")
         except Exception as e:
-            console.print(f"[yellow]! {idx}: {type(e).__name__}: {e}[/]")
+            console.print(f"[yellow]! {idx} flag is queryable but $vectorSearch failed: "
+                          f"{type(e).__name__}: {e}[/]")
+            failed += 1
     console.print()
+    if failed:
+        console.print(f"[yellow]! {failed} index(es) not ready — Act 1 will hang or miss. "
+                      f"Wait and rerun `make warmup`.[/]")
+        console.print()
+        return 1
     return 0
 
 

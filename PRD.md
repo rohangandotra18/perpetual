@@ -56,7 +56,7 @@ Every agent session starts at the same competence, forever. Your agent assembled
 
 ## 5. MongoDB & partners (rubric, 25%)
 
-**Load-bearing Atlas features:** ① Vector Search + Automated Embeddings on `tools.purpose` — retrieval AS the tool-binding mechanism (the definitive "why not Postgres"); ② `$setWindowFields` n-gram mining — learning implemented as an aggregation; ③ change streams — skill transfer between live agents; ④ `$graphLookup` — the delegation graph inside the ritual; ⑤ TTL + fitness — capabilities that die. (Vector index over `messages` too — add `messages_vec` to `ensure_indexes`, currently missing.)
+**Load-bearing Atlas features:** ① Vector Search on `tools.purpose_embedding` — retrieval AS the tool-binding mechanism (the definitive "why not Postgres"); ② `$setWindowFields` n-gram mining — learning implemented as an aggregation; ③ change streams — skill transfer between live agents; ④ `$graphLookup` — the delegation graph inside the ritual; ⑤ TTL + fitness — capabilities that die. Vector indexes also cover `messages`, `skills`, and `memories`.
 
 **Partners, all with real jobs:** Gemini (agent reasoning + macro naming + embeddings + voice drafting) · ElevenLabs (birth announcement) · MCP — the integration surface MongoDB ships its own official server for. LangGraph checkpointer stays P2. *(Fireworks cut: a logo with an invented job weakens the real four.)*
 

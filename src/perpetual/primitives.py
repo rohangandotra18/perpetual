@@ -1,4 +1,4 @@
-"""The seven primitive tools. Each is a thin query over the seeded workplace in Atlas.
+"""The nine primitive tools. Each is a thin query over the seeded workplace in Atlas.
 
 Retrieval strategy everywhere: try $vectorSearch, fall back to keyword/regex so the
 system works before search indexes finish building (and offline in dev).

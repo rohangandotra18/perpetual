@@ -275,8 +275,8 @@ Finish no less than five minutes before you go up.
 - [ ] Full dry run, both acts. Then `reset` again **and** clear the vanilla dirs again.
 
 **T-10 — pre-warm**
-- [ ] Warm the Mongo connection and the vector index — first `$vectorSearch` after idle takes seconds and reads as a hang.
-- [ ] One throwaway Gemini/OpenRouter call to warm TLS/DNS.
+- [ ] `make warmup` — Atlas ping + each vector index reports **queryable** (not a collection-scan fallback). First `$vectorSearch` after idle takes seconds and reads as a hang.
+- [ ] One throwaway Gemini call to warm TLS/DNS.
 - [ ] One ElevenLabs call; confirm it plays through **the room's** PA, not the laptop speaker. Volume set on the PA.
 - [ ] Start `perpetual.watcher` and **see** `watching tools…` before you present. If the change stream cursor silently failed to open, the payoff is dead and you won't learn that until 2:15.
 - [ ] Open both Perpetual and vanilla sessions once to warm MCP startup, then kill them.
