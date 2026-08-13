@@ -16,7 +16,7 @@ Every agent session starts at the same competence, forever. Your agent assembled
 
 1. **The tool list is a query result.** At plan time the agent runs `$vectorSearch` over a `tools` collection in Atlas and binds whatever comes back as its function schema. Nothing is hardcoded. Delete a document → the agent loses a hand. Insert one → it grows one.
 2. **Experience is a collection.** Every run appends a trajectory document. A `$setWindowFields` n-gram aggregation — pattern discovery *in the database* — detects when the same successful action sequence has occurred 3 times.
-3. **Repetition compiles into capability.** The detected ritual becomes a macro document: a readable, declarative step list with `$ref` parameter bindings derived from observed dataflow (no codegen, no `exec()`; the LLM only names it). It's inserted into `tools`, auto-embedded, and is discoverable on the very next turn. `TOOLS KNOWN: 7 → 8`.
+3. **Repetition compiles into capability.** The detected ritual becomes a macro document: a readable, declarative step list with `$ref` parameter bindings derived from observed dataflow (no codegen, no `exec()`; the LLM only names it). It's inserted into `tools`, auto-embedded, and is discoverable on the very next turn. `TOOLS KNOWN: 9 → 10`.
 4. **Skill transfers without experience.** A change stream on `tools` delivers the newborn tool to every other connected agent mid-flight — a different process, a different machine, your teammate's Claude Code session. *Agent A got the experience. Agent B got the skill.*
 5. **Bad tools die.** Fitness counters + a TTL index reap macros that stop earning their place. Natural selection on capabilities.
 
@@ -26,7 +26,7 @@ Every agent session starts at the same competence, forever. Your agent assembled
 
 ## 3. Surfaces — camera vs. credential
 
-**Demo of record (the camera): our own two-terminal rendering** — Agent A and Agent B, every pixel controlled, legible from the back of a room, fully offline-capable (`PERPETUAL_MOCK=1` + Python-cosine fallback). Script already locked in `DEMO.md`: cold 6-step run → miner fires on real trajectories → macro JSON births on screen, ElevenLabs announces it, counter ticks 7→8 → warm run is 1 call/~5s in Maya's voice → Agent B's terminal lights up `SKILL ACQUIRED` unprompted.
+**Demo of record (the camera): our own two-terminal rendering** — Agent A and Agent B, every pixel controlled, legible from the back of a room, fully offline-capable (`PERPETUAL_MOCK=1` + Python-cosine fallback). Script already locked in `DEMO.md`: cold 6-step run → miner fires on real trajectories → macro JSON births on screen, ElevenLabs announces it, counter ticks 9→10 → warm run is 1 call/~5s in Maya's voice → Agent B's terminal lights up `SKILL ACQUIRED` unprompted.
 
 **The credential (15-second coda): the same `tools` collection served into a real Claude Code session over MCP.** This is the user's product vision and it is **verified, not aspirational** — our reviewer probed it on the wire against Claude Code 2.1.220:
 
@@ -34,8 +34,8 @@ Every agent session starts at the same competence, forever. Your agent assembled
 - ✅ `tools/list_changed` is honored **mid-session with no restart** — the reviewer watched a model call a tool that did not exist when its session started. Our wow moment is real.
 - ⚠️ **One-turn race**: Claude Code defers the refresh while that server's tool call is in flight → we emit `list_changed` *before* returning the compile result, not after.
 - ⚠️ Proactive push into an *idle* session is impossible with standard MCP (pull-only); "issue arrives live mid-session" as originally written was wrong. In-CLI surfacing = SessionStart hook banner (re-entry catch-up from a local cache file, 5s timeout) + statusline badge with `refreshInterval: 2`.
-- 📋 Demo-session config: `ENABLE_TOOL_SEARCH=false`, launch via `--mcp-config --strict-mcp-config` (no consent dialog on stage), `MAX_MCP_OUTPUT_TOKENS=50000`, open `/mcp` *after* the birth (its per-server tool count is the free 7→8 visual).
-- **John's transfer beat in Claude Code**: his statusline flips `perpetual: 7 tools` → `⚡ 8 — weekly_update_to_boss` with zero keystrokes (reviewer-rated best risk-adjusted option).
+- 📋 Demo-session config: `ENABLE_TOOL_SEARCH=false`, launch via `--mcp-config --strict-mcp-config` (no consent dialog on stage), `MAX_MCP_OUTPUT_TOKENS=50000`, open `/mcp` *after* the birth (its per-server tool count is the free 9→10 visual).
+- **John's transfer beat in Claude Code**: his statusline flips `perpetual: 9 tools` → `⚡ 10 — weekly_update_to_boss` with zero keystrokes (reviewer-rated best risk-adjusted option).
 
 **Cut from the stage** (kept in README as roadmap): `whats_new`/`recall` Q&A beats (mechanically RAG — the judge sim flagged them as the two disqualifying-shaped moments), the suggestion engine (a second wow that dilutes the first), Linear connector, live GitHub polling (replaced by replay through the identical normalizer — honestly labeled), Fireworks-as-decoration, experimental Claude channels.
 
@@ -58,7 +58,7 @@ Every agent session starts at the same competence, forever. Your agent assembled
 
 **Load-bearing Atlas features:** ① Vector Search + Automated Embeddings on `tools.purpose` — retrieval AS the tool-binding mechanism (the definitive "why not Postgres"); ② `$setWindowFields` n-gram mining — learning implemented as an aggregation; ③ change streams — skill transfer between live agents; ④ `$graphLookup` — the delegation graph inside the ritual; ⑤ TTL + fitness — capabilities that die. (Vector index over `messages` too — add `messages_vec` to `ensure_indexes`, currently missing.)
 
-**Partners, all with real jobs:** OpenRouter (agent reasoning + macro naming + voice drafting) · ElevenLabs (birth announcement) · LangChain/LangGraph (checkpointer, P2) · MCP — the integration surface MongoDB ships its own official server for. *(Fireworks cut: a logo with an invented job weakens the real four.)*
+**Partners, all with real jobs:** Gemini (agent reasoning + macro naming + embeddings + voice drafting) · ElevenLabs (birth announcement) · MCP — the integration surface MongoDB ships its own official server for. LangGraph checkpointer stays P2. *(Fireworks cut: a logo with an invented job weakens the real four.)*
 
 ## 6. Impact (the claim we own)
 

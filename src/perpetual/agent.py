@@ -173,14 +173,9 @@ def _bump(doc: dict | None, ok: bool):
     if not doc:
         return
     try:
-        if doc.get("kind") == "macro":
-            inc = {"stats.invocations": 1}
-            if ok:
-                inc["stats.successes"] = 1
-        else:
-            inc = {"fitness.calls": 1}
-            if ok:
-                inc["fitness.successes"] = 1
+        inc = {"fitness.calls": 1}
+        if ok:
+            inc["fitness.successes"] = 1
         db().tools.update_one({"_id": doc["_id"]}, {"$inc": inc})
     except Exception:
         pass

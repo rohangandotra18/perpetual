@@ -1,4 +1,4 @@
-"""LLM client: OpenRouter (openai-compatible) with a deterministic mock mode.
+"""LLM client: Gemini (OpenAI-compatible endpoint) with a deterministic mock mode.
 
 Mock mode (PERPETUAL_MOCK=1 or no key) lets the entire pipeline — retrieval, trajectory
 logging, mining, macro birth, skill transfer — run end-to-end offline. The mock policy
@@ -52,11 +52,16 @@ def _mock(messages: list[dict], tools: list[dict]) -> dict:
             if m["role"] == "tool" and m.get("content", "").startswith("{")]
     task = next((m["content"] for m in messages if m["role"] == "user"), "").lower()
 
-    # Prefer a compiled macro if one matches the task — the warm-run behavior.
+    # Prefer a compiled macro if its meaningful name tokens appear in the task.
+    # Require 2+ content tokens (skip "to"/"my"/short bits) so "to" alone cannot match.
+    _skip = {"send", "do", "make", "write", "get", "create", "please", "run",
+             "my", "me", "the", "a", "an", "for", "out", "up", "to", "of", "in"}
     for t in tools:
         name = t["function"]["name"]
         if t["function"].get("description", "").startswith("[macro]") and not done:
-            if any(w in task for w in name.split("_")):
+            tokens = [w for w in name.split("_") if w not in _skip and len(w) > 2]
+            need = min(2, len(tokens)) or 1
+            if tokens and sum(1 for w in tokens if w in task) >= need:
                 return {"content": None, "tool_call": {"name": name, "args": {}}}
 
     mock_args = {

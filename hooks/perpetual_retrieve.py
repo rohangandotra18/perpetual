@@ -28,6 +28,25 @@ sys.path.insert(0, str(ROOT / "src"))
 MIN_SCORE = float(os.environ.get("PERPETUAL_MIN_SCORE", "0.70"))
 MARGIN = 0.04  # a 2nd skill rides along only if nearly as relevant as the 1st
 BUDGET_S = float(os.environ.get("PERPETUAL_HOOK_BUDGET", "6"))
+# One trigger hit must clear MIN_SCORE even if $vectorSearch is cold.
+LEXICAL_FLOOR = 0.82
+
+
+def _trigger_hits(prompt: str, triggers: list) -> int:
+    """Unigram ∈ prompt tokens, or multi-word trigger as a substring."""
+    prompt_l = prompt.lower()
+    words = set(re.findall(r"[a-z]+", prompt_l))
+    hits = 0
+    for trig in triggers or []:
+        t = str(trig).lower().strip()
+        if not t:
+            continue
+        if " " in t:
+            if t in prompt_l:
+                hits += 1
+        elif t in words:
+            hits += 1
+    return hits
 
 
 def retrieve(prompt: str) -> dict:
@@ -36,10 +55,13 @@ def retrieve(prompt: str) -> dict:
     from perpetual import embed
     from perpetual.db import db
 
-    qv = embed.embed([prompt])[0]
+    vecs = embed.embed([prompt])
+    qv = vecs[0] if vecs else None
     d = db()
 
     def search(coll: str, index: str, path: str, limit: int, project: dict) -> list[dict]:
+        if qv is None:
+            return []
         try:
             return list(d[coll].aggregate([
                 {"$vectorSearch": {"index": index, "path": path, "queryVector": qv,
@@ -49,27 +71,30 @@ def retrieve(prompt: str) -> dict:
         except Exception:
             return []
 
-    # HYBRID skill retrieval: semantic ($vectorSearch) fused with deterministic
-    # lexical matching on each skill's trigger terms, both evaluated in MongoDB.
-    # Semantic alone can drift on long prompts; a literal "button" must always win.
+    # HYBRID: $vectorSearch fused with trigger matching (unigrams + phrases).
+    # Collection is tiny — scan triggers in Python so "call to action" works.
     sk = search("skills", "skills_vec", "embedding", 4,
                 {"name": 1, "title": 1, "body": 1, "triggers": 1})
-    words = set(re.findall(r"[a-z]+", prompt.lower()))
-    lex = list(d.skills.aggregate([
-        {"$match": {"triggers": {"$in": sorted(words)}}},
-        {"$project": {"name": 1, "title": 1, "body": 1, "triggers": 1,
-                      "hits": {"$size": {"$setIntersection": ["$triggers", sorted(words)]}}}},
-        {"$sort": {"hits": -1}}, {"$limit": 3},
-    ]))
-    lex_hits = {x["name"]: x["hits"] for x in lex}
-    by_name = {x["name"]: x for x in sk} | {x["name"]: {**x, "score": 0.0} for x in lex if x["name"] not in {y["name"] for y in sk}}
-    for name, doc in by_name.items():
-        doc["lexical"] = lex_hits.get(name, 0)
-        doc["score"] = doc.get("score", 0.0) + 0.08 * doc["lexical"]  # trigger boost
+    by_name = {x["name"]: {**x, "score": float(x.get("score") or 0.0)}
+               for x in sk if x.get("name")}
+    for s in d.skills.find({}, {"name": 1, "title": 1, "body": 1, "triggers": 1}):
+        name = s.get("name")
+        if not name:
+            continue
+        hits = _trigger_hits(prompt, s.get("triggers") or [])
+        if name not in by_name:
+            if not hits:
+                continue
+            by_name[name] = {**s, "score": 0.0}
+        by_name[name]["lexical"] = hits
+        score = float(by_name[name].get("score") or 0.0)
+        if hits:
+            score = max(score, LEXICAL_FLOOR) + 0.08 * min(hits, 2)
+        by_name[name]["score"] = score
     fused = sorted(by_name.values(), key=lambda x: -x["score"])
 
     return {
-        "skills": fused[:1],
+        "skills": fused[:4],  # render() applies MIN_SCORE + MARGIN
         "memories": search("memories", "memories_vec", "embedding", 3,
                            {"topic": 1, "content": 1, "saved_at": 1}),
         "macros": [t for t in search("tools", "tools_vec", "purpose_embedding", 3,

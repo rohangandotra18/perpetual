@@ -1,8 +1,7 @@
 {
   "mcpServers": {
     "perpetual": {
-      "command": ".venv/bin/python",
-      "args": ["src/perpetual/mcp_server.py"]
+      "command": "./scripts/run-mcp.sh"
     }
   }
 }

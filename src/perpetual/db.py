@@ -3,10 +3,9 @@
 Collections:
   tools         — primitive + macro tool documents; the agent's action space IS this collection
   trajectories  — per-run step logs mined for repeated behavior
-  runs          — run outcomes (feeds fitness counters)
-  entities      — workplace knowledge graph nodes (people, projects, issues, channels)
+  memories      — saved decisions/specs; retrieved by the prompt hook
+  skills        — human-authored conventions; retrieved by the prompt hook
   relations     — graph edges, traversed with $graphLookup
-  checkpoints   — LangGraph MongoDBSaver state
 """
 import os
 import time

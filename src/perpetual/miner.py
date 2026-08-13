@@ -15,7 +15,7 @@ This is the part of Perpetual that turns *behavior* into *capability*.
              rewritten into a {"$ref": "sN.text"} binding.
 
   3. BIRTH — insert into `tools` (so the agent's $vectorSearch action space grows
-             7 -> 8) and emit an `events` doc that the change stream delivers to
+             9 -> 10) and emit an `events` doc that the change stream delivers to
              Agent B.
 
 Run:  PYTHONPATH=src python -m perpetual.miner [--dry-run]
@@ -229,7 +229,8 @@ def compile_macro(winner: dict) -> dict:
         "born_at": now.isoformat(),
         "fitness": {"calls": 0, "successes": 0},
         "status": "active",
-        "expires_at": (now + dt.timedelta(days=MACRO_TTL_DAYS)).isoformat(),
+        # BSON Date — Atlas TTL indexes ignore ISO strings
+        "expires_at": now + dt.timedelta(days=MACRO_TTL_DAYS),
     }
     if vec is None:  # EMBED_PROVIDER=auto: Atlas populates it server-side
         doc.pop("purpose_embedding")

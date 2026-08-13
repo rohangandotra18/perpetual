@@ -270,7 +270,7 @@ Finish no less than five minutes before you go up.
 
 **T-15 — reset and one full dry run**
 - [ ] `PYTHONPATH=src python -m perpetual.demo reset` — clears learned macros, trajectories **and `memories`**, keeps the seeded workplace.
-- [ ] `python -m perpetual.db` returns `ready` — vector indexes **queryable**, not merely created. A freshly built index that isn't queryable yet is the #1 way Act 1 dies.
+- [ ] `PYTHONPATH=src python -m perpetual.db` returns `ready` — vector indexes **queryable**, not merely created. A freshly built index that isn't queryable yet is the #1 way Act 1 dies.
 - [ ] `PYTHONPATH=src python -m perpetual.demo birth-check` → support **2**. (One live run on stage makes 3.)
 - [ ] Full dry run, both acts. Then `reset` again **and** clear the vanilla dirs again.
 

@@ -15,24 +15,33 @@ ME = "U_MAYA"
 LAST_DRAFT: dict = {"text": None}
 
 
+def _query_vector(text: str) -> list[float] | None:
+    vecs = embed.embed([text])
+    if not vecs:
+        return None
+    return vecs[0]
+
+
 def _vector_query(coll, index: str, path: str, query: str, limit: int, flt: dict | None = None):
     d = db()
+    qv = _query_vector(query)
     try:
-        stage = {"$vectorSearch": {"index": index, "path": path, "queryVector": embed.embed([query])[0],
+        if qv is None:
+            raise RuntimeError("no query vector")
+        stage = {"$vectorSearch": {"index": index, "path": path, "queryVector": qv,
                                    "numCandidates": 200, "limit": limit}}
         if flt:
             stage["$vectorSearch"]["filter"] = flt
         return list(d[coll].aggregate([stage]))
     except Exception:
-        docs = list(d[coll].find(flt or {}))
-        qv = embed.embed([query])[0]
+        docs = list(d[coll].find(flt or {}).limit(max(limit * 8, 24)))
         scored = []
         for doc in docs:
             v = doc.get(path) or doc.get("embedding")
-            if v:
+            if qv is not None and v:
                 scored.append((embed.cosine(qv, v), doc))
             else:
-                text = doc.get("text") or doc.get("purpose") or ""
+                text = doc.get("text") or doc.get("purpose") or doc.get("content") or ""
                 hits = sum(1 for w in query.lower().split() if w in text.lower())
                 scored.append((hits * 0.01, doc))
         scored.sort(key=lambda x: -x[0])

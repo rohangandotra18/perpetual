@@ -83,7 +83,7 @@ def tool_docs() -> list[dict]:
 # ── subcommands ───────────────────────────────────────────────────────────────
 def cmd_reset(_args) -> int:
     header("PERPETUAL — RESET", "rebuilding the known-good --warm state", INFO)
-    console.print(f"[{INFO}]ensuring collections + indexes (tools_vec, messages_vec)…[/]")
+    console.print(f"[{INFO}]ensuring collections + indexes (tools_vec, messages_vec, memories_vec, skills_vec)…[/]")
     ensure_indexes()
     console.print(f"[{OK}]✓ indexes ensured[/]")
     console.print()
@@ -247,14 +247,54 @@ def cmd_birth_check(_args) -> int:
     return 0
 
 
+def cmd_warmup(_args) -> int:
+    header("PERPETUAL — WARMUP", "ping Atlas + vector indexes", INFO)
+    from . import primitives
+    d = db()
+    n = d.tools.count_documents({"status": "active"})
+    console.print(f"[{OK}]✓ connected  db={d.name}  tools={n}[/]")
+    probes = [
+        ("tools_vec", "tools", "purpose_embedding", "weekly update", {"status": "active"}),
+        ("skills_vec", "skills", "embedding", "button", None),
+        ("memories_vec", "memories", "embedding", "button spec", None),
+    ]
+    for idx, coll, path, q, flt in probes:
+        try:
+            hits = primitives._vector_query(coll, idx, path, q, 3, flt)
+            console.print(f"[{OK}]✓ {idx} queryable ({len(hits)} hits)[/]")
+        except Exception as e:
+            console.print(f"[yellow]! {idx}: {type(e).__name__}: {e}[/]")
+    console.print()
+    return 0
+
+
+def cmd_agent_a(args) -> int:
+    from .agent import run
+    out = run(args.task, agent_id="agent-a")
+    return 0 if out["outcome"] == "success" else 1
+
+
+def cmd_agent_b(_args) -> int:
+    from .watcher import Watcher
+    Watcher("agent-b").run()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="perpetual.demo", description="PERPETUAL demo conductor")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("reset", help="seed.reset() + ensure_indexes(); print counts (--warm state)")
     sub.add_parser("status", help="TOOLS KNOWN, trajectory count, last 3 events")
     sub.add_parser("birth-check", help="is ritual support at 2 (one live run needed) or 3?")
+    sub.add_parser("warmup", help="ping Atlas and run a cheap $vectorSearch on each index")
+    a = sub.add_parser("agent-a", help="run Agent A (same as python -m perpetual.agent)")
+    a.add_argument("task", nargs="?", default="send my weekly update to dana")
+    sub.add_parser("agent-b", help="run Agent B (same as python -m perpetual.watcher)")
     args = ap.parse_args(argv)
-    return {"reset": cmd_reset, "status": cmd_status, "birth-check": cmd_birth_check}[args.cmd](args)
+    return {
+        "reset": cmd_reset, "status": cmd_status, "birth-check": cmd_birth_check,
+        "warmup": cmd_warmup, "agent-a": cmd_agent_a, "agent-b": cmd_agent_b,
+    }[args.cmd](args)
 
 
 if __name__ == "__main__":
