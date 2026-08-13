@@ -4,7 +4,7 @@
 
 Every agent you have used ships with a fixed tool list. Someone typed those functions into a file. The agent will have exactly those tools on day 1 and on day 400. It does the same six-step chore every Thursday and it is exactly as slow on the fiftieth Thursday as on the first.
 
-Perpetual removes the file. Tools live in a MongoDB collection. At every reasoning step the agent asks Atlas Vector Search *"what can I do about this?"* and the top-k hits become its action space for that turn. That means the action space is writable — and Perpetual writes to it. A miner reads the agent's own execution logs, finds action sequences that keep repeating and keep succeeding, and compiles them into a new named tool. The agent's tool count goes up while it is running.
+Perpetual removes the file. Tools live in a MongoDB collection. At the start of each run the agent asks Atlas Vector Search *"what can I do about this?"* and the top-k hits become its action space for that run. That means the action space is writable — and Perpetual writes to it. A miner reads the agent's own execution logs, finds action sequences that keep repeating and keep succeeding, and compiles them into a new named tool. The next run — and every other agent watching the collection — sees the new tool.
 
 Then a second agent, in a second terminal, picks up that tool through a change stream — seconds later, no restart, no deploy.
 
@@ -31,9 +31,9 @@ The unlock is that **skill becomes data**. Data replicates, indexes, expires, an
 
 ## Retrieval is automatic, and it's a vector search
 
-**Nothing about what the agent can do, or how it should do it, is hardcoded. Both are `$vectorSearch` results.**
+**What the agent can do is a `$vectorSearch` result.** Claude Code also retrieves *how* it should behave the same way (skills + memories hook). The terminal agent additionally carries a short system prompt so the cold 6-step weekly-update run is deterministic on stage.
 
-**The action space is a query.** In the terminal agent this is already true: every reasoning step runs `$vectorSearch` over `tools.purpose_embedding` and the top-k documents *become* the function schema handed to the model for that turn. Primitive *execution* still goes through a small Python registry (`primitives.REGISTRY`); macros are JSON documents run by `macro.execute_macro`. Insert a tool document, it is retrievable — and therefore callable — with no restart.
+**The action space is a query.** In the terminal agent this is already true: at the start of each run, `$vectorSearch` over `tools.purpose_embedding` returns the top-k documents that *become* the function schema handed to the model. Primitive *execution* still goes through a small Python registry (`primitives.REGISTRY`); macros are JSON documents run by `macro.execute_macro`. Insert a tool document, it is retrievable — and therefore callable — on the next run, with no restart.
 
 **Now skills and memories work the same way — and the user never asks for them.** Skills are documents in a `skills` collection with Gemini embeddings. Memories — decisions, specs, conventions the agent was told to remember — live in `memories` the same way. A Claude Code **`UserPromptSubmit` hook** intercepts every prompt *before the model sees it*: embed the prompt with `gemini-embedding-001`, `$vectorSearch` both collections, inject the top matches as context. Type *"help me work on the button"* and the button-design skill plus the stored button spec are simply **already there**. No `load_skill` tool, no `@`-mention, no memory of what exists. The right know-how arrives because the sentence you typed was semantically near it.
 
@@ -70,13 +70,13 @@ One embedding model, one dimensionality, one distance metric — so tools, skill
 
 ```mermaid
 flowchart TB
-    subgraph Agent["Agent A — reason / retrieve / execute loop"]
-        R[reason] --> TS["tool search:<br/>$vectorSearch on tools.purpose"]
-        TS --> EX[execute primitive or macro]
+    subgraph Agent["Agent A — one search, then reason / execute"]
+        TS["tool search once per run:<br/>$vectorSearch on tools.purpose"] --> R[reason]
+        R --> EX[execute primitive or macro]
         EX --> R
     end
 
-    EX -->|every step appended| TR[("trajectories")]
+    EX -->|run appended when finished| TR[("trajectories")]
     TS -.->|top-k = the action space| TOOLS[("tools<br/>primitives + macros<br/>vector index on purpose")]
 
     TR --> MINER["miner: aggregation pipeline<br/>$setWindowFields n-grams<br/>support >= 3"]
@@ -96,7 +96,7 @@ flowchart TB
 Not decoration. Remove any one of these and the demo stops working.
 
 **1. Atlas Vector Search on `tools.purpose` — *the tool list IS a query result***
-This is the whole thesis. `tool_search(intent)` runs `$vectorSearch` against `tools.purpose_embedding` with `kind`/`status` filters and returns the top-k tools as the model's function schema for that turn. Because retrieval is the binding mechanism, a newly inserted document is *immediately* a callable tool — no registry reload, no restart, no code. Embeddings are written client-side with `gemini-embedding-001` (`EMBED_PROVIDER=gemini`), hashed locally for offline demos (`fake`), or left to Atlas Automated Embeddings (`auto`). We also vector-index `messages.embedding` so "what did we say about reconciliation" is semantic, not keyword.
+This is the whole thesis. `tool_search(intent)` runs `$vectorSearch` against `tools.purpose_embedding` with `kind`/`status` filters and returns the top-k tools as the model's function schema for that **run**. Because retrieval is the binding mechanism, a newly inserted document is a callable tool on the next run — no registry reload, no restart, no code. Embeddings are written client-side with `gemini-embedding-001` (`EMBED_PROVIDER=gemini`), hashed locally for offline demos (`fake`), or left to Atlas Automated Embeddings (`auto`). We also vector-index `messages.embedding` so "what did we say about reconciliation" is semantic, not keyword.
 
 **2. Aggregation framework as the miner — *learning is a pipeline***
 `trajectories` stores one document per executed *run* (`steps[]` with `tool`, `args`, `ok`). The miner is an aggregation: `$match` success → `$unwind` steps → `$setWindowFields` sliding n-grams of consecutive tool names (n = 6, then 5, then 4) → `$group` by the window with `support` = distinct trajectories → `$match` support ≥ 3. No ML, no external job runner. Behavior mining is a database query, which is why it can run mid-demo in under a second.
@@ -105,7 +105,7 @@ This is the whole thesis. `tool_search(intent)` runs `$vectorSearch` against `to
 People are nodes in `people`; `relations` holds typed edges (`delegated_to`, `asked_help_of`). `who_did_i_delegate(topic)` is a `$graphLookup` from Maya out through those edges up to depth 2, so "who did I hand the reconciliation work to?" resolves to John Diaz *and* anyone he pulled in — a multi-hop answer a flat lookup can't give.
 
 **4. Change streams — *skill transfer***
-Agent B runs `db.tools.watch([{ $match: { operationType: "insert", "fullDocument.kind": "macro" }}])`. The macro document is fully self-describing (steps + bindings + purpose), so B doesn't fetch code — it receives the tool. On stage, B's terminal prints `SKILL ACQUIRED: weekly_update_to_dana` while A's insert cursor is still warm. This is the moment the demo exists for.
+Agent B runs `db.tools.watch([{ $match: { operationType: { $in: ["insert", "replace"] } } }])` and announces documents whose `kind` is `macro` (2s poll fallback if `watch()` cannot open). The macro document is fully self-describing (steps + bindings + purpose), so B doesn't fetch code — it receives the tool. On stage, B's terminal prints `SKILL ACQUIRED: weekly_update_to_dana` while A's insert cursor is still warm. This is the moment the demo exists for.
 
 **5. TTL + fitness counters — *bad tools die***
 Every macro carries `expires_at` (a BSON Date, so Atlas TTL can actually delete it) and `fitness {calls, successes}`. Neglect lets Mongo's TTL monitor delete it. Fitness is incremented on every invocation; `status` is a filter field on the vector index, so a later quarantine pass would make a loser unretrievable — and therefore not a tool.
@@ -126,7 +126,7 @@ The agent loop is a Python `for` over tool calls in `src/perpetual/agent.py`. Ev
 | `issues` | tracker items assigned to / opened by Maya |
 | `sent_messages` | Maya's voice corpus — things she actually wrote |
 | `style_profile` | distilled tone rules derived from `sent_messages` |
-| `events` | `tool_born` (and similar) — what Agent B's change stream is watching |
+| `events` | `tool_born` audit log written at compile time. Agent B does **not** watch this — it watches `tools`. |
 
 ### The nine primitives
 
@@ -177,7 +177,7 @@ Here is the real document born on stage, compiled from the 6-step ritual Maya ke
 
 `{"$ref": "s4.text"}` means *"the `text` field of whatever step `s4` returned"*. Refs resolve against a context dict holding `input` plus each `save_as`; dotted paths walk dicts and list indices. `guard` is optional — checked as soon as its `$ref` is resolvable, so it can stop a later `send_message` rather than failing before any step runs.
 
-The LLM's only job in compilation is **naming and writing the `purpose`** (via Gemini). The *steps are copied from the mined trajectory*. The one binding we rewrite from observed dataflow is `send_message.body ← draft_message.text`; other args stay as literals from the exemplar run. That's why this is safe enough to run live.
+The LLM's only job in compilation is **naming and writing the `purpose`** (via Gemini). The *steps are copied from the mined trajectory*. The compiler rewrites one observed producer→consumer pair — `send_message.body ← draft_message.text` — from a `DATAFLOW` table; other args stay as literals from the exemplar run. That's why this is safe enough to run live.
 
 ---
 
@@ -187,7 +187,7 @@ Being straight about it, because a demo that lies is worthless:
 
 **Seeded (fictional, deterministic):** the entire workplace. Maya Chen, staff engineer at "Northwind Payments"; her manager Dana Okafor (`U_DANA`); John Diaz (`U_JOHN`), whom she delegates to; plus a few more colleagues. `messages` is a **Slack-export-shaped** corpus (same `channel` / `user` / `ts` / `text` / `thread_ts` fields a real `export.json` gives you), `issues` mirror a tracker, `sent_messages` is her voice corpus. **No OAuth, no live Slack, no live GitHub** — a deliberate call for a 3.5-hour build. Swapping in a real Slack export is a **loader change**, not an architecture change: point `perpetual.seed` at the export directory and the same shape lands in the same collection.
 
-**Live (real, happening in front of you):** everything that makes this a project rather than a mockup. Real Atlas cluster. Real `$vectorSearch` retrieval choosing the tool list every turn. Real aggregation mining over the trajectories that were just written. Real macro document inserted at runtime. Real change stream delivering it to a second process. Real TTL and fitness counters. Real LLM calls. Nothing about the learning loop is faked or pre-baked — reset the database and it happens again from zero.
+**Live (real, happening in front of you):** everything that makes this a project rather than a mockup. Real Atlas cluster. Real `$vectorSearch` retrieval choosing the tool list at the start of each run. Real aggregation mining over the trajectories that were just written. Real macro document inserted at runtime. Real change stream delivering it to a second process. Real TTL and fitness counters. Real LLM calls. Nothing about the learning loop is faked or pre-baked — reset the database and it happens again from zero.
 
 ---
 
@@ -243,7 +243,7 @@ make test       # offline unit tests (no Atlas required)
 
 - Macros are **linear**. No branching, no loops, no parallel steps. Straight-line chores are the 80% case and the format stays auditable.
 - Mining needs **support ≥ 3** identical successful sequences. Fewer runs, no compilation — the demo seeds prior runs so the third one fires on stage.
-- Parameter bindings are inferred from observed dataflow. A macro that binds wrongly fails its `guard` or its fitness counters, and TTL removes it. That's the safety story: cheap to create, cheap to kill.
+- Parameter bindings come from a one-row `DATAFLOW` table (`send_message.body ← draft_message.text`), not from comparing logged values at compile time. A macro that binds wrongly fails its `guard` or its fitness counters, and TTL removes it. That's the safety story: cheap to create, cheap to kill.
 - Vector-retrieved tool lists mean **retrieval quality is agent capability**. A bad `purpose` string makes a good tool invisible. This is a real new failure mode and we like that it's a database problem.
 
 ---

@@ -34,8 +34,8 @@ Every agent session starts at the same competence, forever. Your agent assembled
 - ✅ `tools/list_changed` is honored **mid-session with no restart** — the reviewer watched a model call a tool that did not exist when its session started. Our wow moment is real.
 - ⚠️ **One-turn race**: Claude Code defers the refresh while that server's tool call is in flight → we emit `list_changed` *before* returning the compile result, not after.
 - ⚠️ Proactive push into an *idle* session is impossible with standard MCP (pull-only); "issue arrives live mid-session" as originally written was wrong. In-CLI surfacing = SessionStart hook banner (re-entry catch-up from a local cache file, 5s timeout) + statusline badge with `refreshInterval: 2`.
-- 📋 Demo-session config: `ENABLE_TOOL_SEARCH=false`, launch via `--mcp-config --strict-mcp-config` (no consent dialog on stage), `MAX_MCP_OUTPUT_TOKENS=50000`, open `/mcp` *after* the birth (its per-server tool count is the free 9→10 visual).
-- **John's transfer beat in Claude Code**: his statusline flips `perpetual: 9 tools` → `⚡ 10 — weekly_update_to_boss` with zero keystrokes (reviewer-rated best risk-adjusted option).
+- 📋 Demo-session config: `ENABLE_TOOL_SEARCH=false`, launch via `--mcp-config --strict-mcp-config` (no consent dialog on stage), `MAX_MCP_OUTPUT_TOKENS=50000`. Narrate **`TOOLS KNOWN` on the collection (9 → 10)**, not Claude's `/mcp` list — that list is always one higher because `compile_ritual` is appended (10 before birth, 11 after).
+- **John's transfer beat in Claude Code**: his statusline flips `perpetual: 9 tools` → `⚡ 10 — weekly_update_to_dana` with zero keystrokes (reviewer-rated best risk-adjusted option).
 
 **Cut from the stage** (kept in README as roadmap): `whats_new`/`recall` Q&A beats (mechanically RAG — the judge sim flagged them as the two disqualifying-shaped moments), the suggestion engine (a second wow that dilutes the first), Linear connector, live GitHub polling (replaced by replay through the identical normalizer — honestly labeled), Fireworks-as-decoration, experimental Claude channels.
 
@@ -80,4 +80,4 @@ Known landmines already identified by review, fixed in the first commit: venv pi
 
 ## 8. Consistency locks (narration ≡ screen)
 
-Tool name **`weekly_update_to_boss`** everywhere · task string "send my weekly update to dana" · counter starts at **7** (the 7 seeded primitives) · no pre-existing `weekly_update` tool anywhere (the agent must acquire a capability it provably lacked) · seeded prior trajectories = weeks of Jul 31 + Aug 7, live run = third repetition.
+Tool name **`weekly_update_to_dana`** everywhere · task string "send my weekly update to dana" · counter starts at **9** (the 9 seeded primitives) · birth is **9 → 10** · no pre-existing `weekly_update` tool anywhere (the agent must acquire a capability it provably lacked) · seeded prior trajectories = weeks of Jul 31 + Aug 7, live run = third repetition.

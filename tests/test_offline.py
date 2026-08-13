@@ -148,6 +148,11 @@ class MinerTests(unittest.TestCase):
         self.assertEqual(_fallback_name("send my weekly update to dana"),
                          "weekly_update_to_dana")
 
+    def test_naming_prompt_exemplifies_the_demo_name(self):
+        src = (ROOT / "src" / "perpetual" / "miner.py").read_text()
+        self.assertIn('weekly_update_to_dana', src)
+        self.assertNotIn("weekly_update_to_boss", src)
+
     def test_bind_params_rewrites_send_body(self):
         save = {"draft_message": "s4"}
         out = _bind_params("send_message",
@@ -254,6 +259,28 @@ class EmbedTests(unittest.TestCase):
         c = embed.embed(["unrelated pineapple recipes"])[0]
         self.assertEqual(a, b)
         self.assertGreater(embed.cosine(a, b), embed.cosine(a, c))
+
+
+class VoiceTests(unittest.TestCase):
+    def test_announce_is_noop_without_key(self):
+        from perpetual import voice
+        os.environ["PERPETUAL_MOCK"] = "0"
+        os.environ.pop("ELEVENLABS_API_KEY", None)
+        voice.announce("weekly_update_to_dana")  # must not raise or call the network
+
+    def test_announce_is_noop_in_mock_mode(self):
+        from perpetual import voice
+        os.environ["PERPETUAL_MOCK"] = "1"
+        os.environ["ELEVENLABS_API_KEY"] = "should-not-be-used"
+        voice.announce("weekly_update_to_dana")
+
+
+class ConsistencyTests(unittest.TestCase):
+    def test_docs_lock_the_demo_name(self):
+        for rel in ("PRD.md", "README.md", "DEMO.md"):
+            text = (ROOT / rel).read_text()
+            self.assertNotIn("weekly_update_to_boss", text, rel)
+            self.assertIn("weekly_update_to_dana", text, rel)
 
 
 if __name__ == "__main__":
