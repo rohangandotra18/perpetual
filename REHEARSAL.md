@@ -33,14 +33,24 @@ cd ~/demo-vanilla && claude
 
 # ACT 0 — "it remembers what we decided"  (~70s)
 
-**Beat 1 — design out loud. Type into BOTH terminals (same words).**
-> designing the primary pay button for our checkout screen. someone in the room said make it teal. pill shape, chunky. give me your take in 4 lines.
+**Beat 1 — ask for something only YOUR TEAM knows. Type into BOTH terminals (same words).**
+> what are OUR team's rules for a primary button? quote them, and say where you got them.
 
-*Say:* "Same model both sides. Watch the left one." — T1 answers with our team's actual button conventions (tap targets, verb-first label, five states). **A banner appears: `⚡ perpetual: recalled 1 skill from Atlas`.** Nobody asked for it; typing the word *button* pulled the skill out of MongoDB.
+*(Rehearsal finding: do NOT open with "design me a button" — both lanes give good generic design
+advice and the contrast is invisible. Asking for *our* rules is what vanilla cannot fake.)*
+
+**Verified outcome:**
+- **T2 (vanilla):** *"Which is it, and where do the rules currently live?"* — it has nothing.
+- **T1 (Perpetual):** quotes six exact team rules — 44x44pt tap targets, "Send $40.00" not "Submit",
+  five states before ship, 4.5:1 contrast, 100ms press feedback, height tokens 52/44/32pt.
+  **Banner: `⚡ perpetual: recalled 1 skill from Atlas`.** Nobody invoked anything.
+
+*Say:* "Same model both sides. The left one just read our team's conventions out of MongoDB because
+I typed the word *button*." 
 
 **Beat 2 — audience improv (do not skip; this is the "not canned" proof).**
 *Ask the room:* "give me a hex colour, or what the button should say." Then type into **both**:
-> good. go with teal #0FB5A8, 26pt radius, 52pt tall, label 'Pay $40.00'. save that to memory so I don't explain it again tomorrow.
+> ok for checkout use teal #0FB5A8, 26pt radius, 52pt tall, label 'Pay $40.00'. save that to memory so I don't explain it again tomorrow.
 
 *(swap in whatever the room shouted — it genuinely does not matter, `save_to_memory` stores the sentence that was actually said.)*
 T1 calls `save_to_memory` → it lands in Atlas with a Gemini embedding. T2 just says "noted."
@@ -89,15 +99,16 @@ python -m perpetual.agent "send my weekly update to dana"
 
 ---
 
-# CODA — "say it, get it"  (~25s, optional if time is tight)
+# CODA — "say it, get it"  (~25s)
 
-In T1, type:
-> i do this every friday. just make it a tool.
+Only if you used **Option A** above (terminal birth). If you used Option B, the coda already happened —
+skip to the second prompt.
 
-Claude calls `compile_ritual`. **Then a SECOND, separate prompt** (hard rule — same-turn loses the tool-list refresh race):
-> cool, run it.
+**Then a SECOND, separate prompt** (hard rule — same-turn loses the tool-list refresh race):
+> yes, run it.
 
-The newborn tool is in its list and executes. No restart. *Say:* "The tool list isn't a file — it's a query against MongoDB. The database changed, so the agent's abilities changed, mid-session."
+The newborn tool is in its list and executes — it assembles the real update from Slack, issues and
+delegations. Claude may ask you to confirm before "sending"; that reads as responsible, let it. *Say:* "The tool list isn't a file — it's a query against MongoDB. The database changed, so the agent's abilities changed, mid-session."
 
 ---
 
@@ -117,6 +128,8 @@ The newborn tool is in its list and executes. No restart. *Say:* "The tool list 
 | Agent B silent >5s | `Ctrl-C`, relaunch with `--poll`. Visually identical. |
 | Atlas slow / wifi dies | Everything except the Claude sessions runs on `PERPETUAL_MOCK=1`. Last resort: the recorded video. |
 | Coda tool not visible | You merged the two prompts. Send a second prompt. |
+| `compile_ritual` says "no ritual yet" | The tool was already born (miner + coda both run, or no reset). One birth per reset. |
+| Claude reads repo files instead of calling the tool | Your wording was too vague. Say "compile it into a tool for me". |
 
 # Q&A ammo
 
