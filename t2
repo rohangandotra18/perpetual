@@ -1,0 +1,4 @@
+#!/bin/bash
+# Launch a VANILLA Claude Code session — Perpetual fully off (control lane).
+export PERPETUAL_OFF=1
+exec claude --strict-mcp-config "$@"
