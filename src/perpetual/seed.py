@@ -33,7 +33,7 @@ def _embed_field(docs: list[dict], text_key: str, out_key: str = "embedding"):
 def reset(full: bool = True):
     d = db()
     names = ["people", "messages", "issues", "sent_messages", "style_profile",
-             "relations", "tools", "trajectories", "events", "memories"]
+             "relations", "tools", "trajectories", "events", "memories", "skills"]
     for n in names:
         d[n].delete_many({})
     print("collections cleared")
@@ -50,6 +50,11 @@ def reset(full: bool = True):
     _insert(d.relations, _load("relations"))
     _insert(d.trajectories, _load("trajectories_seed"))
 
+    skills = _load("skills")
+    for sk in skills:  # embed the natural-language description, not the body
+        sk["_embed_text"] = f"{sk.get('title', '')}. {sk.get('description', '')} {' '.join(sk.get('triggers', []))}"
+    _insert(d.skills, _embed_field(skills, "_embed_text"))
+
     tools = []
     for p in PRIMITIVE_DOCS:
         tools.append({**p, "kind": "primitive", "status": "active",
@@ -58,7 +63,8 @@ def reset(full: bool = True):
     tools = _embed_field(tools, "purpose", "purpose_embedding")
     d.tools.insert_many(tools)
 
-    print(f"seeded: {d.messages.count_documents({})} messages, "
+    print(f"seeded: {d.skills.count_documents({})} skills, "
+          f"{d.messages.count_documents({})} messages, "
           f"{d.issues.count_documents({})} issues, "
           f"{d.sent_messages.count_documents({})} sent, "
           f"{d.relations.count_documents({})} edges, "

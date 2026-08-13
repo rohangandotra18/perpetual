@@ -1,0 +1,18 @@
+{
+  "env": {
+    "ENABLE_TOOL_SEARCH": "false"
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.venv/bin/python\" \"$CLAUDE_PROJECT_DIR/hooks/perpetual_retrieve.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

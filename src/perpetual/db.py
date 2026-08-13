@@ -36,7 +36,7 @@ VECTOR_DIMS = int(os.environ.get("EMBED_DIMS", "768"))
 
 def ensure_indexes():
     d = db()
-    for name in ("tools", "trajectories", "runs", "messages", "relations", "people", "events", "memories"):
+    for name in ("tools", "trajectories", "runs", "messages", "relations", "people", "events", "memories", "skills"):
         if name not in d.list_collection_names():
             d.create_collection(name)
 
@@ -49,6 +49,7 @@ def ensure_indexes():
     _ensure_vector_index(d.tools, "tools_vec", path="purpose_embedding")
     _ensure_vector_index(d.messages, "messages_vec", path="embedding")
     _ensure_vector_index(d.memories, "memories_vec", path="embedding")
+    _ensure_vector_index(d.skills, "skills_vec", path="embedding")
 
 
 def _ensure_vector_index(coll, name: str, path: str):
@@ -74,7 +75,8 @@ def wait_for_search_indexes(timeout_s: int = 300):
     """Atlas search indexes build asynchronously; block until queryable."""
     d = db()
     deadline = time.time() + timeout_s
-    pending = {"tools": "tools_vec", "messages": "messages_vec", "memories": "memories_vec"}
+    pending = {"tools": "tools_vec", "messages": "messages_vec",
+               "memories": "memories_vec", "skills": "skills_vec"}
     while pending and time.time() < deadline:
         for coll_name, idx_name in list(pending.items()):
             for info in d[coll_name].list_search_indexes():

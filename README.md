@@ -29,6 +29,41 @@ The unlock is that **skill becomes data**. Data replicates, indexes, expires, an
 
 ---
 
+## Retrieval is automatic, and it's a vector search
+
+**Nothing about what the agent can do, or how it should do it, is hardcoded. Both are `$vectorSearch` results.**
+
+**The action space is a query.** In the terminal agent this is already true: every reasoning step runs `$vectorSearch` over `tools.purpose_embedding` and the top-k documents *become* the function schema handed to the model for that turn. There is no tool registry, no `if name == ...` dispatch. Insert a document, it is callable.
+
+**Now skills and memories work the same way — and the user never asks for them.** Skills are documents in a `skills` collection with Gemini embeddings. Memories — decisions, specs, conventions the agent was told to remember — live in `memories` the same way. A Claude Code **`UserPromptSubmit` hook** intercepts every prompt *before the model sees it*: embed the prompt with `gemini-embedding-001`, `$vectorSearch` both collections, inject the top matches as context. Type *"help me work on the button"* and the button-design skill plus the stored button spec are simply **already there**. No `load_skill` tool, no `@`-mention, no memory of what exists. The right know-how arrives because the sentence you typed was semantically near it.
+
+**This is not RAG bolted onto a chatbot.** RAG retrieves *reference material* and hands it to a model as reading. Here the retrieval output **is the model's function schema and its operating instructions** — what it *can do* and *how it is supposed to behave* are both decided at query time by a similarity search. And because compiled macros (mined from the agent's own trajectories) are inserted into the very same vector space with the very same embedding model, **a skill the agent invented is retrieved by exactly the same mechanism as one a human wrote**. There is no privileged path for human-authored capability. The learning loop and the retrieval loop are the same loop.
+
+```mermaid
+flowchart LR
+    U["user prompt<br/>'help me work on the button'"] --> H["Claude Code<br/>UserPromptSubmit hook"]
+    H --> E["embed<br/>gemini-embedding-001 · 768d"]
+    E --> V{"$vectorSearch"}
+    V --> S[("skills")]
+    V --> M[("memories")]
+    S --> C["injected context<br/>skill body + remembered decisions"]
+    M --> C
+    C --> CL["Claude<br/>sees prompt + know-how together"]
+```
+
+### Vector indexes
+
+| index | collection.field | model | dims | similarity |
+|---|---|---|---|---|
+| `tools_vec` | `tools.purpose_embedding` | `gemini-embedding-001` | 768 | cosine |
+| `memories_vec` | `memories.embedding` | `gemini-embedding-001` | 768 | cosine |
+| `skills_vec` | `skills.embedding` | `gemini-embedding-001` | 768 | cosine |
+| `messages_vec` | `messages.embedding` | `gemini-embedding-001` | 768 | cosine |
+
+One embedding model, one dimensionality, one distance metric — so tools, skills, memories and workplace history are all comparable objects in one semantic space. Adding a capability to Perpetual means inserting a document.
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -86,6 +121,8 @@ The agent loop is a LangGraph graph checkpointed into `checkpoints` in the same 
 | `trajectories` | one doc per executed step; the miner's input |
 | `runs` | run outcomes, feeds fitness |
 | `entities` / `relations` | workplace graph nodes and edges (`$graphLookup`) |
+| `skills` | operating instructions as documents (`skills_vec`); retrieved by the prompt hook, never called by name |
+| `memories` | saved decisions, specs and conventions (`memories_vec`); retrieved the same way |
 | `messages` | Slack-export-shaped workplace history, vector-indexed on `text` |
 | `issues` | tracker items assigned to / opened by Maya |
 | `sent_messages` | Maya's voice corpus — things she actually wrote |
@@ -203,6 +240,7 @@ make demo       # reset, pre-warm connections, print the run order
 ## Partner tools
 
 - **MongoDB Atlas** — Vector Search, Automated Embeddings, aggregation, `$graphLookup`, change streams, TTL. The substrate, not a datastore.
+- **Google Gemini** — `gemini-embedding-001` (768d) embeds tools, skills, memories, messages and every incoming user prompt. One model for the whole semantic space.
 - **OpenRouter** — the agent's reasoning model, and the namer/purpose-writer at macro compilation.
 - **Fireworks** — fast small-model summarization for channel digests and trajectory step labels, where latency matters more than depth.
 - **ElevenLabs** — one voice line, at the one moment it earns its place: the agent announcing the tool it just invented.

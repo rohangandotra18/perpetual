@@ -1,0 +1,170 @@
+[
+  {
+    "_id": "SK-BUTTON-DESIGN",
+    "name": "button-design",
+    "title": "Designing buttons and interactive controls",
+    "triggers": [
+      "button",
+      "buttons",
+      "cta",
+      "call to action",
+      "tap target",
+      "control",
+      "pill",
+      "primary action",
+      "submit button",
+      "pay button",
+      "toggle",
+      "fab"
+    ],
+    "description": "Use when designing, building, restyling, or reviewing any button, CTA, pill, toggle, or tappable control in a mobile or web UI. Applies whenever someone says they are working on a button, adding a new action to a screen, changing what a button says or how it looks, or deciding between primary, secondary, and destructive actions. Covers sizing, labels, states, contrast, and motion for Northwind's payments surfaces where a mis-tapped button moves real money.",
+    "body": "- Minimum tap target 44x44pt (iOS) / 48x48dp (Android), even if the visual pill is smaller \u2014 pad, don't grow the fill.\n- One primary button per screen. Everything else is secondary, tertiary, or a plain text link. If you need two primaries, the screen is doing two jobs.\n- Labels are sentence case, verb-first, and name the outcome: \"Send $40.00\", not \"Submit\" or \"OK\". Never end in an ellipsis unless a second confirmation step follows.\n- Define all five states before you ship: default, pressed, disabled, loading, and error/retry. Loading replaces the label with a spinner and keeps the button's width fixed so the layout never jumps.\n- Money-moving buttons are never disabled silently \u2014 if the action can't proceed, keep the button enabled and show the reason on tap. A dead grey button with no explanation is a support ticket.\n- Contrast: label vs. fill at 4.5:1 minimum; don't rely on color alone to distinguish destructive actions \u2014 pair red with an explicit word like \"Cancel payment\".\n- Press feedback within 100ms. Scale to 0.97 with a 120ms ease-out, or a fill darken of ~8%. No bounce, no spring overshoot on financial actions.\n- Destructive and irreversible actions (refund, close account, cancel transfer) require a confirmation sheet, not just a red button.\n- Corner radius, height, and horizontal padding come from the design tokens \u2014 never hardcode. Height tokens: 52pt full-width, 44pt inline, 32pt compact.\n- Full-width buttons sit above the safe area with 16pt side margins and stay pinned, not scrolled away, on any screen where the button is the point of the screen.",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  },
+  {
+    "_id": "SK-LEADERSHIP-UPDATES",
+    "name": "writing-updates-to-leadership",
+    "title": "Writing status updates for leadership",
+    "triggers": [
+      "update",
+      "status update",
+      "weekly update",
+      "exec summary",
+      "leadership",
+      "report to my manager",
+      "standup writeup",
+      "vp update",
+      "snippet"
+    ],
+    "description": "Use when writing a status update, weekly snippet, exec summary, or any written report going up the chain to a manager, director, or VP. Applies when someone asks to summarize what the team shipped, draft a progress note, prepare for a review, or tell leadership where a project stands. The goal is a short, factual update that lets a busy reader decide something without a follow-up meeting.",
+    "body": "- Three headings, always, in this order: Shipped / In flight / Risks. Nothing else.\n- Shipped = in production and measurable. If it merged but isn't behind a live flag for real users, it is In flight.\n- No adjectives about our own work. Delete \"great\", \"solid\", \"huge\", \"significant\", \"successfully\". State the thing and the number.\n- Every line carries a number or a date: \"Apple Pay checkout live for 100% of US users since Aug 8; auth rate 94.1% (was 91.6%)\".\n- In flight lines end with a committed date and an owner name. \"Soon\" and \"early next month\" are not dates.\n- Risks are stated as: the risk, the impact if it lands, and what you need from the reader. If you need nothing, say \"no ask\".\n- Bad news goes first inside Risks and is stated plainly in the first clause. Never bury a slip in a subordinate clause.\n- Max 200 words. If it doesn't fit, the update is a doc and the update links to it.\n- Never explain how hard something was. Effort is not an outcome.\n- Do not editorialize about other teams; describe the dependency and its status only.",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  },
+  {
+    "_id": "SK-DELEGATING-WORK",
+    "name": "delegating-work",
+    "title": "Handing work to a teammate",
+    "triggers": [
+      "delegate",
+      "hand off",
+      "handoff",
+      "assign",
+      "ask someone to",
+      "give this to",
+      "onboard someone",
+      "spin up a teammate",
+      "who should own this"
+    ],
+    "description": "Use when handing a task, project, or investigation to another person \u2014 assigning a ticket, writing a handoff note, onboarding someone onto an area, or asking a teammate to take something over. Applies whenever the phrasing is about giving work away, splitting up a project, or getting someone else to own a piece. Focuses on transferring enough context that the person can make decisions without coming back to you.",
+    "body": "- Write the handoff as: outcome, why now, constraints, definition of done, deadline, and who decides. Six lines, in that order.\n- Delegate the outcome, not the steps. If you specify the steps, you own the result and you have not actually delegated.\n- Name one owner. Two owners is zero owners.\n- Always give the deadline as a date and say what it's driven by (\"Aug 27, before the interchange rate change goes live\"). A deadline without a reason gets renegotiated.\n- Include the context they can't get from the ticket: the failed prior attempt, the person who cares, the political constraint, the file where the tricky part lives.\n- State explicitly what they can decide alone vs. what they must check with you. Default should be \"decide alone\".\n- Give them the escalation path: who to ask when blocked, and how long to be stuck before asking (\"more than half a day, ping me\").\n- Set one checkpoint before the deadline, not a stream of check-ins. Put it on the calendar at handoff time.\n- Hand over access at the same moment as the work \u2014 repo, dashboard, on-call rotation, vendor console. Missing access is the number one silent stall.\n- After handoff, route questions about the work to them in public, not through you. Re-answering makes you the owner again.",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  },
+  {
+    "_id": "SK-INCIDENT-RESPONSE",
+    "name": "incident-response",
+    "title": "Running a production incident",
+    "triggers": [
+      "incident",
+      "outage",
+      "sev1",
+      "sev2",
+      "page",
+      "pagerduty",
+      "production is down",
+      "payments failing",
+      "rollback",
+      "postmortem",
+      "on call"
+    ],
+    "description": "Use when production is broken or degrading \u2014 an outage, a paging alert, a spike in failed payments, elevated error rates, a bad deploy, or anything someone calls a sev. Applies when the request is about responding to a live problem, coordinating a fire, deciding whether to roll back, or writing the postmortem afterward. Prioritizes stopping customer impact over understanding root cause.",
+    "body": "- First responder is Incident Commander until they explicitly hand it off by name in the channel. The IC coordinates and does not debug.\n- Open the incident channel and declare severity in the first two minutes. Sev1 = money is not moving or is moving wrongly. Sev2 = degraded but transacting. When unsure, call the higher one; downgrading is cheap.\n- Order of operations, strictly: stop the bleeding, then confirm it stopped, then diagnose. Never invert this to satisfy curiosity.\n- Stop-the-bleeding menu in preference order: flip the feature flag, roll back the deploy, fail over the region, rate-limit the caller, disable the endpoint. Roll back before you understand why \u2014 the revert is not the investigation.\n- Assign three named roles out loud: IC, comms, and one hands-on-keyboard operator. Everyone else observes and does not type in prod.\n- Post a timestamped update every 20 minutes even when nothing has changed. \"No change, still investigating, next update 14:20\" is a valid update.\n- Log every action taken in the channel as you take it, with timestamps. That log is the postmortem timeline.\n- One person touches prod at a time and announces each command before running it. Concurrent mitigations create the second incident.\n- For payments specifically: quantify stuck/duplicated/failed transactions before declaring all-clear, and open the reconciliation task in the same breath as resolving.\n- Postmortem within three business days, blameless, with action items that have owners and dates. \"Be more careful\" is not an action item.",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  },
+  {
+    "_id": "SK-CODE-REVIEW-TONE",
+    "name": "code-review-tone",
+    "title": "Reviewing a teammate's code",
+    "triggers": [
+      "code review",
+      "review this pr",
+      "pull request",
+      "leave comments",
+      "reviewing",
+      "approve",
+      "request changes",
+      "nit",
+      "feedback on code"
+    ],
+    "description": "Use when reviewing a pull request, leaving comments on someone else's code, or deciding whether to approve, block, or nit. Applies when the request is about giving feedback on a diff, being a reviewer, or figuring out how blunt to be in a comment. Also applies when responding to review feedback received on your own change.",
+    "body": "- Block only on: correctness, security, data/money loss, a public API you can't change later, and missing tests for new branching logic. Everything else is non-blocking.\n- Prefix every non-blocking comment with \"nit:\" or \"optional:\" and mean it \u2014 never re-raise a nit after approval.\n- Style is the formatter's job. If you're commenting on spacing, quotes, or import order, fix the linter instead.\n- Comment on the code, never the author. \"This retries non-idempotent charges\" not \"you forgot idempotency\".\n- Ask a real question when you don't understand; assert only when you're sure. \"What happens if the webhook arrives twice here?\" beats a confident wrong claim.\n- Give one concrete alternative with any objection. A rejection without a suggested path is a stall.\n- Praise exactly what's worth copying, specifically and rarely. Blanket \"LGTM nice work\" carries no information.\n- Approve with comments when the remaining items are nits \u2014 don't hold a PR hostage to your preferences.\n- Cap the review at what fits in one sitting; if the diff is over ~400 lines, ask for it to be split rather than skimming and approving.\n- Architecture disagreements move to a call or a doc after two round-trips in the thread. Long comment wars are a smell, not diligence.",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  },
+  {
+    "_id": "SK-SWIFTUI-CONVENTIONS",
+    "name": "swiftui-component-conventions",
+    "title": "Building SwiftUI components the Northwind way",
+    "triggers": [
+      "swiftui",
+      "view",
+      "component",
+      "buttonstyle",
+      "modifier",
+      "preview",
+      "ios ui",
+      "reusable view",
+      "design system",
+      "xcode"
+    ],
+    "description": "Use when writing, refactoring, or reviewing SwiftUI views and reusable components for the Northwind iOS app \u2014 adding a new screen, extracting a component, styling a control, or wiring state into a view. Applies to questions about view composition, styles vs. modifiers, previews, spacing values, and how components should be shared across features.",
+    "body": "- Style controls with a `ButtonStyle` / `LabelStyle` / `ToggleStyle` conformance, never a stack of ad-hoc modifiers at the call site. Call sites should read `Button(\"Send\") { }.buttonStyle(.northwindPrimary)`.\n- No magic numbers. Every spacing, radius, duration, and color comes from `Theme.spacing.*`, `Theme.radius.*`, `Theme.motion.*`, `Theme.color.*`. A raw `16` in a view is a review comment.\n- Every shared component ships with at least three `#Preview` blocks: default, dark mode, and the worst-case content (longest string, largest Dynamic Type, loading state).\n- Views take data, not view models, wherever possible. A component that can be previewed with a struct literal is a component that can be tested.\n- Keep `body` under ~50 lines. Extract to private computed properties or child views, and pass explicit parameters rather than reaching into the environment from deep leaves.\n- `@State` is private and value-typed; shared mutable state uses `@Observable` models injected once at the feature root. No singletons reached from inside a view.\n- Components never format money themselves \u2014 use `CurrencyFormatter` so locale, sign, and rounding stay consistent everywhere.\n- Feature-local views live beside the feature; a view only moves into `DesignSystem/` when a second feature actually needs it. Premature promotion creates parameters nobody uses.\n- Accessibility is part of done: label, trait, and a combined element for composite rows. Test one screen per PR at the largest Dynamic Type size.\n- Animate explicit values with `withAnimation` on state changes, not `.animation()` on the whole view tree; durations come from motion tokens (fast 120ms, base 200ms, slow 320ms).",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  },
+  {
+    "_id": "SK-API-ERROR-HANDLING",
+    "name": "api-error-handling",
+    "title": "Handling API failures, retries, and idempotency",
+    "triggers": [
+      "api error",
+      "retry",
+      "idempotency",
+      "idempotency key",
+      "timeout",
+      "500",
+      "429",
+      "webhook",
+      "network failure",
+      "error message",
+      "double charge"
+    ],
+    "description": "Use when writing or reviewing code that calls a network API or handles its failures \u2014 retries, timeouts, backoff, idempotency keys, webhook processing, error mapping, or what to show the user when a request fails. Especially applies to payment, charge, refund, and transfer calls where a retry can move money twice. Also applies when deciding the wording of a user-facing error.",
+    "body": "- Every mutating request carries a client-generated idempotency key (UUIDv4) that is stable across retries of the same user intent and regenerated only on a new intent. Persist the key with the pending record before sending.\n- Retry only idempotent or idempotency-keyed calls. Never blind-retry a POST that lacks a key \u2014 treat it as unknown-outcome and reconcile instead.\n- Retry policy: max 3 attempts, exponential backoff starting at 250ms with full jitter, hard cap at ~8s total. Retry on 408/429/5xx and transport errors only. Never retry 4xx other than 408/429.\n- Honor `Retry-After` when present; it outranks your backoff math.\n- Timeouts are explicit per call: 10s connect+read for interactive requests, 30s for background reconciliation. There is no such thing as a default timeout you didn't choose.\n- Unknown outcome (timeout, connection reset after send) is its own state \u2014 not success, not failure. Mark the record `pending_unknown`, then resolve by GET on the idempotency key or by webhook. Never guess.\n- Map upstream errors to a small internal enum (`declined`, `insufficient_funds`, `expired_card`, `network`, `rate_limited`, `internal`) at the boundary. Feature code never branches on raw provider strings or HTTP codes.\n- User-facing messages say what happened, whether money moved, and the one next action: \"We couldn't reach your bank. No money left your account. Try again in a minute.\" Never surface a status code, stack trace, or provider error name.\n- Log the request id, idempotency key, attempt number, and latency on every attempt; never log the PAN, CVV, or full auth token.\n- Webhooks are at-least-once: verify the signature, dedupe on event id, and make handlers idempotent. Handlers ack fast and do the work asynchronously.",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  },
+  {
+    "_id": "SK-NAMING-THINGS",
+    "name": "naming-things",
+    "title": "Naming files, functions, and feature flags",
+    "triggers": [
+      "naming",
+      "name this",
+      "what should i call",
+      "rename",
+      "feature flag",
+      "variable name",
+      "function name",
+      "file name",
+      "convention"
+    ],
+    "description": "Use when choosing or changing a name \u2014 a file, module, function, variable, database field, endpoint, branch, or feature flag. Applies when someone asks what to call something, wants a rename suggestion, is setting up a new flag or experiment, or is bikeshedding a term with a teammate. Aims for names that are searchable, predictable, and safe to delete later.",
+    "body": "- Name for what the thing is to its caller, not how it works inside. `refundPayment` not `postReversalToLedger`.\n- Functions are verb phrases; booleans read as assertions (`isSettled`, `hasPendingRefund`); collections are plural. Avoid `data`, `info`, `manager`, `helper`, `utils` \u2014 they mean nothing and become junk drawers.\n- Spell it out. `transactionCount` not `txnCnt`. The only allowed abbreviations are the ones in the glossary: `id`, `url`, `api`, `pan`, `kyc`.\n- Feature flags: `<team>_<feature>_<verb>`, lowercase snake, e.g. `payments_applepay_enabled`. Every flag has an owner and a removal date recorded at creation.\n- Flags describe the new behavior in the affirmative and default to off. Never a double negative (`disable_no_legacy_flow` is banned).\n- Kill-switches are named `*_killswitch`, default on, and are exempt from the removal date \u2014 but they must be documented in the runbook.\n- Files match the primary type they export; one public type per file. Swift files use `UpperCamelCase.swift`, scripts and configs use `kebab-case`.\n- Branches: `<user>/<area>-<short-desc>`, e.g. `sam/checkout-retry-backoff`. Never `fix`, `wip`, or a bare ticket number.\n- Money fields carry their unit and currency handling in the name: `amountMinorUnits`, `feeMinorUnits`. A field named `amount` will eventually be off by 100.\n- If a name needs a comment to explain it, rename it instead. Renaming is cheap before merge and expensive after \u2014 argue about it in the PR, not in six months.",
+    "source": "team-conventions",
+    "updated_at": "2026-08-13T09:00:00Z"
+  }
+]
