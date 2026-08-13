@@ -173,14 +173,9 @@ def _bump(doc: dict | None, ok: bool):
     if not doc:
         return
     try:
-        if doc.get("kind") == "macro":
-            inc = {"stats.invocations": 1}
-            if ok:
-                inc["stats.successes"] = 1
-        else:
-            inc = {"fitness.calls": 1}
-            if ok:
-                inc["fitness.successes"] = 1
+        inc = {"fitness.calls": 1}
+        if ok:
+            inc["fitness.successes"] = 1
         db().tools.update_one({"_id": doc["_id"]}, {"$inc": inc})
     except Exception:
         pass
@@ -259,7 +254,7 @@ def run(task: str, agent_id: str = "agent-a", top_k: int = 12, max_steps: int = 
                                   f"[dim]{_fmt_args(params, 46)}[/dim]")
                 result = execute_macro(doc, primitives.REGISTRY, args, on_step=on_step)
             elif name in primitives.REGISTRY:
-                result = primitives.REGISTRY[name](**args)
+                result = primitives.invoke(name, args)
             else:
                 raise KeyError(f"tool '{name}' is not in the retrieved action space")
         except (MacroError, Exception) as e:  # noqa: B014 - demo resilience

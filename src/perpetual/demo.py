@@ -22,7 +22,7 @@ from rich.table import Table
 from rich.text import Text
 
 from . import seed as seed_mod
-from .db import db, ensure_indexes
+from .db import db, ensure_indexes, index_queryable
 from .llm import RITUAL
 
 console = Console()
@@ -83,7 +83,7 @@ def tool_docs() -> list[dict]:
 # ── subcommands ───────────────────────────────────────────────────────────────
 def cmd_reset(_args) -> int:
     header("PERPETUAL — RESET", "rebuilding the known-good --warm state", INFO)
-    console.print(f"[{INFO}]ensuring collections + indexes (tools_vec, messages_vec)…[/]")
+    console.print(f"[{INFO}]ensuring collections + indexes (tools_vec, messages_vec, memories_vec, skills_vec)…[/]")
     ensure_indexes()
     console.print(f"[{OK}]✓ indexes ensured[/]")
     console.print()
@@ -100,7 +100,7 @@ def cmd_reset(_args) -> int:
     t.add_column("collection", style="bold")
     t.add_column("docs", justify="right", style=INFO)
     for name in ("people", "messages", "issues", "sent_messages", "style_profile",
-                 "relations", "trajectories", "tools", "events"):
+                 "relations", "trajectories", "tools", "skills", "memories", "events"):
         t.add_row(name, str(d[name].count_documents({})))
     console.print(t)
     console.print()
@@ -247,14 +247,91 @@ def cmd_birth_check(_args) -> int:
     return 0
 
 
+def cmd_warmup(_args) -> int:
+    header("PERPETUAL — WARMUP", "ping Atlas + vector indexes", INFO)
+    from . import primitives
+    d = db()
+    n = d.tools.count_documents({"status": "active"})
+    console.print(f"[{OK}]✓ connected  db={d.name}  tools={n}[/]")
+    probes = [
+        ("tools_vec", "tools", "purpose_embedding", "weekly update", {"status": "active"}),
+        ("skills_vec", "skills", "embedding", "button", None),
+        ("memories_vec", "memories", "embedding", "button spec", None),
+        ("messages_vec", "messages", "embedding", "ledger", None),
+    ]
+    # Empty memories is normal after reset; the others must retrieve.
+    must_hit = {"tools", "skills", "messages"}
+    failed = 0
+    for idx, coll, path, q, flt in probes:
+        try:
+            if not index_queryable(d[coll], idx):
+                console.print(f"[yellow]! {idx} not queryable yet[/]")
+                failed += 1
+                continue
+        except Exception as e:
+            console.print(f"[yellow]! {idx}: cannot list indexes ({type(e).__name__}: {e})[/]")
+            failed += 1
+            continue
+        try:
+            qv = primitives._query_vector(q)
+        except Exception as e:
+            console.print(f"[yellow]! {idx} queryable but embed failed ({type(e).__name__}: {e})[/]")
+            failed += 1
+            continue
+        if qv is None:
+            console.print(f"[{OK}]✓ {idx} queryable[/] [{DIM}](no client vector — EMBED_PROVIDER=auto)[/]")
+            continue
+        try:
+            stage = {"$vectorSearch": {"index": idx, "path": path, "queryVector": qv,
+                                       "numCandidates": 8, "limit": 3}}
+            if flt:
+                stage["$vectorSearch"]["filter"] = flt
+            hits = list(d[coll].aggregate([stage]))
+            if coll in must_hit and len(hits) == 0:
+                console.print(f"[yellow]! {idx} queryable but 0 hits — Act 1 retrieval will miss[/]")
+                failed += 1
+                continue
+            console.print(f"[{OK}]✓ {idx} queryable ({len(hits)} hits)[/]")
+        except Exception as e:
+            console.print(f"[yellow]! {idx} flag is queryable but $vectorSearch failed: "
+                          f"{type(e).__name__}: {e}[/]")
+            failed += 1
+    console.print()
+    if failed:
+        console.print(f"[yellow]! {failed} index(es) not ready — Act 1 will hang or miss. "
+                      f"Wait and rerun `make warmup`.[/]")
+        console.print()
+        return 1
+    return 0
+
+
+def cmd_agent_a(args) -> int:
+    from .agent import run
+    out = run(args.task, agent_id="agent-a")
+    return 0 if out["outcome"] == "success" else 1
+
+
+def cmd_agent_b(_args) -> int:
+    from .watcher import Watcher
+    Watcher("agent-b").run()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="perpetual.demo", description="PERPETUAL demo conductor")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("reset", help="seed.reset() + ensure_indexes(); print counts (--warm state)")
     sub.add_parser("status", help="TOOLS KNOWN, trajectory count, last 3 events")
     sub.add_parser("birth-check", help="is ritual support at 2 (one live run needed) or 3?")
+    sub.add_parser("warmup", help="ping Atlas and run a cheap $vectorSearch on each index")
+    a = sub.add_parser("agent-a", help="run Agent A (same as python -m perpetual.agent)")
+    a.add_argument("task", nargs="?", default="send my weekly update to dana")
+    sub.add_parser("agent-b", help="run Agent B (same as python -m perpetual.watcher)")
     args = ap.parse_args(argv)
-    return {"reset": cmd_reset, "status": cmd_status, "birth-check": cmd_birth_check}[args.cmd](args)
+    return {
+        "reset": cmd_reset, "status": cmd_status, "birth-check": cmd_birth_check,
+        "warmup": cmd_warmup, "agent-a": cmd_agent_a, "agent-b": cmd_agent_b,
+    }[args.cmd](args)
 
 
 if __name__ == "__main__":

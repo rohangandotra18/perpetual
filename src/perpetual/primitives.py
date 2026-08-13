@@ -1,4 +1,4 @@
-"""The seven primitive tools. Each is a thin query over the seeded workplace in Atlas.
+"""The nine primitive tools. Each is a thin query over the seeded workplace in Atlas.
 
 Retrieval strategy everywhere: try $vectorSearch, fall back to keyword/regex so the
 system works before search indexes finish building (and offline in dev).
@@ -6,37 +6,69 @@ system works before search indexes finish building (and offline in dev).
 from __future__ import annotations
 
 import datetime as dt
-import os
+import inspect
 
 from . import embed, llm
 from .db import db
 
 ME = "U_MAYA"
 LAST_DRAFT: dict = {"text": None}
+# Seeded corpus is frozen on demo-day, not wall-clock "today". Using utcnow()
+# would make list_my_issues return nothing a week after the corpus dates.
+DEMO_TODAY = dt.datetime(2026, 8, 13)
+
+
+def _query_vector(text: str) -> list[float] | None:
+    vecs = embed.embed([text])
+    if not vecs:
+        return None
+    return vecs[0]
 
 
 def _vector_query(coll, index: str, path: str, query: str, limit: int, flt: dict | None = None):
     d = db()
+    qv = _query_vector(query)
     try:
-        stage = {"$vectorSearch": {"index": index, "path": path, "queryVector": embed.embed([query])[0],
+        if qv is None:
+            raise RuntimeError("no query vector")
+        stage = {"$vectorSearch": {"index": index, "path": path, "queryVector": qv,
                                    "numCandidates": 200, "limit": limit}}
         if flt:
             stage["$vectorSearch"]["filter"] = flt
         return list(d[coll].aggregate([stage]))
     except Exception:
-        docs = list(d[coll].find(flt or {}))
-        qv = embed.embed([query])[0]
+        docs = list(d[coll].find(flt or {}).limit(max(limit * 8, 24)))
         scored = []
         for doc in docs:
             v = doc.get(path) or doc.get("embedding")
-            if v:
+            if qv is not None and v:
                 scored.append((embed.cosine(qv, v), doc))
             else:
-                text = doc.get("text") or doc.get("purpose") or ""
+                text = doc.get("text") or doc.get("purpose") or doc.get("content") or ""
                 hits = sum(1 for w in query.lower().split() if w in text.lower())
                 scored.append((hits * 0.01, doc))
         scored.sort(key=lambda x: -x[0])
         return [doc for _, doc in scored[:limit]]
+
+
+def _filter_kwargs(fn, params: dict) -> dict:
+    """Drop model-invented keys the primitive does not accept, so a live Gemini
+    extra argument cannot TypeError a whole ritual step."""
+    sig = inspect.signature(fn)
+    if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+        return dict(params)
+    allowed = {
+        k for k, p in sig.parameters.items()
+        if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+    }
+    return {k: v for k, v in (params or {}).items() if k in allowed}
+
+
+def invoke(name: str, params: dict | None = None):
+    fn = REGISTRY.get(name)
+    if fn is None:
+        raise KeyError(f"unknown primitive: {name}")
+    return fn(**_filter_kwargs(fn, params or {}))
 
 
 def search_slack(query: str, channel: str | None = None, limit: int = 8) -> dict:
@@ -47,7 +79,7 @@ def search_slack(query: str, channel: str | None = None, limit: int = 8) -> dict
 
 
 def list_my_issues(state: str = "closed", since_days: int = 7) -> dict:
-    cutoff = (dt.datetime(2026, 8, 13) - dt.timedelta(days=since_days)).isoformat()
+    cutoff = (DEMO_TODAY - dt.timedelta(days=since_days)).isoformat()
     q: dict = {"assignee_id": ME, "state": state}
     if state == "closed":
         q["closed_at"] = {"$gte": cutoff}

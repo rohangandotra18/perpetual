@@ -1,4 +1,4 @@
-"""LLM client: OpenRouter (openai-compatible) with a deterministic mock mode.
+"""LLM client: Gemini (OpenAI-compatible endpoint) with a deterministic mock mode.
 
 Mock mode (PERPETUAL_MOCK=1 or no key) lets the entire pipeline — retrieval, trajectory
 logging, mining, macro birth, skill transfer — run end-to-end offline. The mock policy
@@ -18,6 +18,16 @@ GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai"
 
 def mock_mode() -> bool:
     return os.environ.get("PERPETUAL_MOCK") == "1" or not os.environ.get("GEMINI_API_KEY")
+
+
+def _parse_tool_args(raw) -> dict:
+    if isinstance(raw, dict):
+        return raw
+    try:
+        args = json.loads(raw or "{}")
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    return args if isinstance(args, dict) else {}
 
 
 def chat(messages: list[dict], tools: list[dict] | None = None,
@@ -42,7 +52,7 @@ def chat(messages: list[dict], tools: list[dict] | None = None,
     tc = None
     if msg.get("tool_calls"):
         c = msg["tool_calls"][0]
-        tc = {"name": c["function"]["name"], "args": json.loads(c["function"]["arguments"] or "{}")}
+        tc = {"name": c["function"]["name"], "args": _parse_tool_args(c["function"].get("arguments"))}
     return {"content": msg.get("content"), "tool_call": tc}
 
 
@@ -52,11 +62,16 @@ def _mock(messages: list[dict], tools: list[dict]) -> dict:
             if m["role"] == "tool" and m.get("content", "").startswith("{")]
     task = next((m["content"] for m in messages if m["role"] == "user"), "").lower()
 
-    # Prefer a compiled macro if one matches the task — the warm-run behavior.
+    # Prefer a compiled macro if its meaningful name tokens appear in the task.
+    # Require 2+ content tokens (skip "to"/"my"/short bits) so "to" alone cannot match.
+    _skip = {"send", "do", "make", "write", "get", "create", "please", "run",
+             "my", "me", "the", "a", "an", "for", "out", "up", "to", "of", "in"}
     for t in tools:
         name = t["function"]["name"]
         if t["function"].get("description", "").startswith("[macro]") and not done:
-            if any(w in task for w in name.split("_")):
+            tokens = [w for w in name.split("_") if w not in _skip and len(w) > 2]
+            need = min(2, len(tokens)) or 1
+            if tokens and sum(1 for w in tokens if w in task) >= need:
                 return {"content": None, "tool_call": {"name": name, "args": {}}}
 
     mock_args = {
@@ -67,7 +82,7 @@ def _mock(messages: list[dict], tools: list[dict]) -> dict:
         "draft_message": {"purpose": "weekly update to dana",
                           "bullets": ["ledger migration phase 2", "webhook hardening",
                                       "delegations status", "closed issues"]},
-        "send_message": {"to": "U_DANA", "subject": "weekly update", "body": {"$last_draft": True}},
+        "send_message": {"to": "U_DANA", "subject": "weekly update"},
     }
     for step in RITUAL:
         if step not in done and step in available:

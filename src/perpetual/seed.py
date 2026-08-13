@@ -8,7 +8,16 @@ from . import embed
 from .db import db, ensure_indexes
 from .primitives import PRIMITIVE_DOCS
 
-SEED_DIR = pathlib.Path(__file__).resolve().parents[2] / "seed"
+
+def _repo_root() -> pathlib.Path:
+    here = pathlib.Path(__file__).resolve()
+    for p in [here.parent, *here.parents]:
+        if (p / "seed").is_dir() and (p / "pyproject.toml").exists():
+            return p
+    return here.parents[2]
+
+
+SEED_DIR = _repo_root() / "seed"
 
 
 def _load(name: str):
@@ -33,10 +42,12 @@ def _embed_field(docs: list[dict], text_key: str, out_key: str = "embedding"):
 def reset(full: bool = True):
     d = db()
     names = ["people", "messages", "issues", "sent_messages", "style_profile",
-             "relations", "tools", "trajectories", "events", "memories", "skills"]
+             "relations", "trajectories", "events", "memories", "skills"]
+    if full:
+        names.append("tools")
     for n in names:
         d[n].delete_many({})
-    print("collections cleared")
+    print("collections cleared" + ("" if full else " (kept tools)"))
 
     def _insert(coll, docs):
         if docs:
@@ -53,15 +64,19 @@ def reset(full: bool = True):
     skills = _load("skills")
     for sk in skills:  # embed the natural-language description, not the body
         sk["_embed_text"] = f"{sk.get('title', '')}. {sk.get('description', '')} {' '.join(sk.get('triggers', []))}"
-    _insert(d.skills, _embed_field(skills, "_embed_text"))
+    skills = _embed_field(skills, "_embed_text")
+    for sk in skills:
+        sk.pop("_embed_text", None)
+    _insert(d.skills, skills)
 
-    tools = []
-    for p in PRIMITIVE_DOCS:
-        tools.append({**p, "kind": "primitive", "status": "active",
-                      "fitness": {"calls": 0, "successes": 0},
-                      "born_at": dt.datetime.utcnow().isoformat(), "expires_at": None})
-    tools = _embed_field(tools, "purpose", "purpose_embedding")
-    d.tools.insert_many(tools)
+    if full:
+        tools = []
+        for p in PRIMITIVE_DOCS:
+            tools.append({**p, "kind": "primitive", "status": "active",
+                          "fitness": {"calls": 0, "successes": 0},
+                          "born_at": dt.datetime.utcnow().isoformat(), "expires_at": None})
+        tools = _embed_field(tools, "purpose", "purpose_embedding")
+        d.tools.insert_many(tools)
 
     print(f"seeded: {d.skills.count_documents({})} skills, "
           f"{d.messages.count_documents({})} messages, "

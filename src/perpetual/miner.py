@@ -15,7 +15,7 @@ This is the part of Perpetual that turns *behavior* into *capability*.
              rewritten into a {"$ref": "sN.text"} binding.
 
   3. BIRTH — insert into `tools` (so the agent's $vectorSearch action space grows
-             7 -> 8) and emit an `events` doc that the change stream delivers to
+             9 -> 10) and emit an `events` doc that the change stream delivers to
              Agent B.
 
 Run:  PYTHONPATH=src python -m perpetual.miner [--dry-run]
@@ -34,7 +34,7 @@ from rich.json import JSON
 from rich.panel import Panel
 from rich.table import Table
 
-from . import embed, llm
+from . import embed, llm, voice
 from .db import db
 
 console = Console()
@@ -44,8 +44,7 @@ NGRAM_SIZES = (6, 5, 4)
 MACRO_TTL_DAYS = 7
 
 # Observed dataflow: (consumer tool, arg name) <- (producer tool, output field).
-# Derived from the trajectories, not hardcoded intent: send_message's body is always
-# the text draft_message just produced ("<draft from step 4>" in the logs).
+# Encoded as a table, not inferred by comparing logged values at compile time.
 DATAFLOW = {
     ("send_message", "body"): ("draft_message", "text"),
 }
@@ -173,7 +172,7 @@ def _name_and_purpose(ngram: list[str], task: str) -> tuple[str, str]:
         f"The task I was given each time was: \"{task}\".\n"
         "Name this compiled skill and describe it.\n"
         'Reply with ONLY minified JSON: {"name":"snake_case_name","purpose":"one sentence"}\n'
-        'The name must be snake_case like "weekly_update_to_boss". '
+        'The name must be snake_case like "weekly_update_to_dana". '
         "The purpose must be ONE sentence in the first person describing what ritual "
         "I automate, phrased so it can be matched by semantic search."
     )
@@ -229,7 +228,8 @@ def compile_macro(winner: dict) -> dict:
         "born_at": now.isoformat(),
         "fitness": {"calls": 0, "successes": 0},
         "status": "active",
-        "expires_at": (now + dt.timedelta(days=MACRO_TTL_DAYS)).isoformat(),
+        # BSON Date — Atlas TTL indexes ignore ISO strings
+        "expires_at": now + dt.timedelta(days=MACRO_TTL_DAYS),
     }
     if vec is None:  # EMBED_PROVIDER=auto: Atlas populates it server-side
         doc.pop("purpose_embedding")
@@ -237,7 +237,7 @@ def compile_macro(winner: dict) -> dict:
 
 
 def birth(doc: dict, winner: dict) -> dict:
-    """Insert the macro + emit the tool_born event the change stream is watching."""
+    """Insert the macro into `tools` (Agent B watches that collection) and log a tool_born event."""
     d = db()
     d.tools.insert_one(doc)
     d.events.insert_one({
@@ -245,6 +245,7 @@ def birth(doc: dict, winner: dict) -> dict:
         "ts": dt.datetime.utcnow().isoformat(),
         "payload": {"name": doc["name"], "ngram": winner["ngram"], "support": winner["support"]},
     })
+    voice.announce(doc["name"])
     return doc
 
 
