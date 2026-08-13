@@ -1,0 +1,47 @@
+[
+  {"_id":"R01","src":"U_MAYA","dst":"U_JOHN","type":"delegated_to","topic":"reconciliation retry job","weight":3,"evidence":["M021","M025","M048","NW-104"],"status":"resolved","last_seen":"2026-08-05T16:25:00Z"},
+  {"_id":"R02","src":"U_MAYA","dst":"U_JOHN","type":"delegated_to","topic":"flaky settlement test","weight":3,"evidence":["M051","M054","M115","NW-107"],"status":"resolved","last_seen":"2026-08-13T09:40:00Z"},
+  {"_id":"R03","src":"U_MAYA","dst":"U_JOHN","type":"delegated_to","topic":"webhook signature rotation","weight":4,"evidence":["M078","M081","M083","M106","NW-112"],"status":"resolved","last_seen":"2026-08-12T09:12:00Z"},
+
+  {"_id":"R04","src":"U_MAYA","dst":"U_PRIYA","type":"asked_help_of","topic":"staging db creds for the ledger replica","weight":1,"evidence":["M035","M036"],"status":"resolved","last_seen":"2026-08-05T09:03:00Z"},
+  {"_id":"R05","src":"U_MAYA","dst":"U_PRIYA","type":"asked_help_of","topic":"owner for the webhook signing key rotation","weight":1,"evidence":["M068","M069"],"status":"resolved","last_seen":"2026-08-07T10:21:00Z"},
+  {"_id":"R06","src":"U_SAM","dst":"U_MAYA","type":"asked_help_of","topic":"q3 capacity estimate for payments","weight":1,"evidence":["M065","NW-105"],"status":"unanswered","last_seen":"2026-08-07T09:30:00Z"},
+  {"_id":"R07","src":"U_PRIYA","dst":"U_MAYA","type":"asked_help_of","topic":"ownership of the nightly reconciliation job","weight":1,"evidence":["M009","M010"],"status":"resolved","last_seen":"2026-08-03T10:06:00Z"},
+  {"_id":"R08","src":"U_LENA","dst":"U_MAYA","type":"asked_help_of","topic":"review of checkout redesign pr 812","weight":2,"evidence":["M012","M014","M058"],"status":"resolved","last_seen":"2026-08-06T11:20:00Z"},
+
+  {"_id":"R09","src":"U_MAYA","dst":"U_PRIYA","type":"blocked_by","topic":"expired staging db credentials","weight":1,"evidence":["M035","NW-111"],"status":"resolved","last_seen":"2026-08-05T09:01:00Z"},
+  {"_id":"R10","src":"U_LENA","dst":"U_MAYA","type":"blocked_by","topic":"checkout pr review turnaround","weight":2,"evidence":["M014","M041"],"status":"resolved","last_seen":"2026-08-07T10:40:00Z"},
+  {"_id":"R11","src":"U_SAM","dst":"U_MAYA","type":"blocked_by","topic":"q3 capacity estimate for the planning doc","weight":1,"evidence":["M065","NW-105"],"status":"open","last_seen":"2026-08-07T09:30:00Z"},
+  {"_id":"R12","src":"U_JOHN","dst":"U_PRIYA","type":"blocked_by","topic":"signing key cutover window","weight":2,"evidence":["M067","M105"],"status":"resolved","last_seen":"2026-08-12T09:10:00Z"},
+  {"_id":"R13","src":"U_MAYA","dst":"U_JOHN","type":"blocked_by","topic":"main is red from the settlement test flake","weight":2,"evidence":["M016","M050","M116"],"status":"resolved","last_seen":"2026-08-13T09:42:00Z"},
+
+  {"_id":"R14","src":"U_MAYA","dst":"NW-102","type":"worked_on","topic":"ledger migration phase 2 dual-write","weight":5,"evidence":["M027","M031","M039"],"status":"resolved","last_seen":"2026-08-07T09:31:00Z"},
+  {"_id":"R15","src":"U_MAYA","dst":"NW-103","type":"worked_on","topic":"internal reporting read cutover to v2","weight":3,"evidence":["M055","M064","M066"],"status":"resolved","last_seen":"2026-08-07T09:31:00Z"},
+  {"_id":"R16","src":"U_MAYA","dst":"NW-109","type":"worked_on","topic":"settlement webhook hardening","weight":4,"evidence":["M077","M087","M114"],"status":"resolved","last_seen":"2026-08-13T09:15:00Z"},
+  {"_id":"R17","src":"U_MAYA","dst":"NW-115","type":"worked_on","topic":"settlement webhook 502 incident and postmortem","weight":5,"evidence":["M090","M093","M096","M100","M107"],"status":"resolved","last_seen":"2026-08-12T09:40:00Z"},
+  {"_id":"R18","src":"U_MAYA","dst":"NW-116","type":"worked_on","topic":"gateway body limit and streaming verify","weight":3,"evidence":["M096","M098","M099"],"status":"resolved","last_seen":"2026-08-11T09:48:00Z"},
+  {"_id":"R19","src":"U_MAYA","dst":"NW-106","type":"worked_on","topic":"review of lena's checkout redesign","weight":3,"evidence":["M040","M041","M058"],"status":"resolved","last_seen":"2026-08-06T11:20:00Z"},
+  {"_id":"R20","src":"U_MAYA","dst":"NW-113","type":"worked_on","topic":"ledger migration phase 3 design","weight":2,"evidence":["M104","M112","M120"],"status":"open","last_seen":"2026-08-13T11:24:00Z"},
+  {"_id":"R21","src":"U_MAYA","dst":"NW-110","type":"worked_on","topic":"alert on gateway 5xx rate","weight":1,"evidence":["M108","M109"],"status":"open","last_seen":"2026-08-12T10:12:00Z"},
+  {"_id":"R22","src":"U_JOHN","dst":"NW-104","type":"worked_on","topic":"reconciliation retry counter persistence","weight":3,"evidence":["M025","M034","M048"],"status":"resolved","last_seen":"2026-08-05T16:20:00Z"},
+  {"_id":"R23","src":"U_JOHN","dst":"NW-107","type":"worked_on","topic":"flaky settlement batch ordering test","weight":3,"evidence":["M054","M063","M115"],"status":"resolved","last_seen":"2026-08-13T09:40:00Z"},
+  {"_id":"R24","src":"U_JOHN","dst":"NW-112","type":"worked_on","topic":"dual-key signature verification","weight":3,"evidence":["M083","M094","M106"],"status":"resolved","last_seen":"2026-08-12T09:12:00Z"},
+  {"_id":"R25","src":"U_LENA","dst":"NW-106","type":"worked_on","topic":"checkout redesign address form","weight":4,"evidence":["M012","M057","M070","M110"],"status":"resolved","last_seen":"2026-08-12T11:30:00Z"},
+  {"_id":"R26","src":"U_LENA","dst":"NW-114","type":"worked_on","topic":"stale cached checkout shell","weight":1,"evidence":["M084","M086"],"status":"resolved","last_seen":"2026-08-10T11:17:00Z"},
+  {"_id":"R27","src":"U_PRIYA","dst":"NW-117","type":"worked_on","topic":"webhook p99 latency regression","weight":2,"evidence":["M017","M059"],"status":"resolved","last_seen":"2026-08-06T13:30:00Z"},
+
+  {"_id":"R28","src":"U_MAYA","dst":"AREA_LEDGER","type":"owns","topic":"ledger migration","weight":5,"evidence":["M005","NW-101"],"status":"active","last_seen":"2026-08-12T14:00:00Z"},
+  {"_id":"R29","src":"U_MAYA","dst":"AREA_SETTLEMENT_WEBHOOK","type":"owns","topic":"settlement webhook path","weight":4,"evidence":["M087","M114","NW-109"],"status":"active","last_seen":"2026-08-13T09:15:00Z"},
+  {"_id":"R30","src":"U_JOHN","dst":"AREA_RECONCILIATION","type":"owns","topic":"nightly reconciliation job","weight":3,"evidence":["M025","NW-104"],"status":"active","last_seen":"2026-08-05T17:04:00Z"},
+  {"_id":"R31","src":"U_PRIYA","dst":"AREA_STAGING_INFRA","type":"owns","topic":"staging infrastructure and credentials","weight":3,"evidence":["M032","M036","NW-111"],"status":"active","last_seen":"2026-08-05T09:03:00Z"},
+  {"_id":"R32","src":"U_PRIYA","dst":"AREA_GATEWAY","type":"owns","topic":"ingress gateway and signing keys","weight":3,"evidence":["M067","M089","M105"],"status":"active","last_seen":"2026-08-12T09:10:00Z"},
+  {"_id":"R33","src":"U_LENA","dst":"AREA_CHECKOUT","type":"owns","topic":"checkout frontend","weight":4,"evidence":["M084","NW-106"],"status":"active","last_seen":"2026-08-12T11:30:00Z"},
+  {"_id":"R34","src":"U_SAM","dst":"AREA_ROADMAP","type":"owns","topic":"payments roadmap and release notes","weight":3,"evidence":["M045","M047","NW-105"],"status":"active","last_seen":"2026-08-13T11:20:00Z"},
+  {"_id":"R35","src":"U_DANA","dst":"AREA_PLANNING","type":"owns","topic":"quarterly planning","weight":3,"evidence":["M001","M082","NW-118"],"status":"active","last_seen":"2026-08-13T09:02:00Z"},
+
+  {"_id":"R36","src":"U_MAYA","dst":"U_DANA","type":"reports_to","topic":"weekly update recipient","weight":6,"evidence":["M001","M101"],"status":"active","last_seen":"2026-08-11T10:22:00Z"},
+  {"_id":"R37","src":"U_JOHN","dst":"U_DANA","type":"reports_to","topic":"eng reporting line","weight":1,"evidence":["M082"],"status":"active","last_seen":"2026-08-10T10:00:00Z"},
+  {"_id":"R38","src":"U_PRIYA","dst":"U_DANA","type":"reports_to","topic":"eng reporting line","weight":1,"evidence":["M019"],"status":"active","last_seen":"2026-08-03T16:30:00Z"},
+  {"_id":"R39","src":"U_LENA","dst":"U_DANA","type":"reports_to","topic":"eng reporting line","weight":1,"evidence":["M060"],"status":"active","last_seen":"2026-08-06T15:45:00Z"},
+  {"_id":"R40","src":"U_SAM","dst":"U_DANA","type":"reports_to","topic":"product reporting line","weight":1,"evidence":["M060","M062"],"status":"active","last_seen":"2026-08-06T15:48:00Z"}
+]

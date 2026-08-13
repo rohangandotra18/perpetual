@@ -1,0 +1,71 @@
+{
+  "_id": "maya-v1",
+  "user_id": "U_MAYA",
+  "derived_from": ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12"],
+  "updated_at": "2026-08-13T08:00:00Z",
+  "rules": [
+    {"text": "Use exactly three lowercase section headers in this order: shipped:, in flight:, risks:", "confidence": 0.98},
+    {"text": "Never capitalize section headers or the first word of a bullet", "confidence": 0.95},
+    {"text": "Bullets are terse fragments, around 11 words, no leading article", "confidence": 0.92},
+    {"text": "State outcomes with numbers: row counts, durations, percentages, error rates", "confidence": 0.9},
+    {"text": "Never use adjectives to describe her own work. No 'great', 'solid', 'huge', 'clean'", "confidence": 0.94},
+    {"text": "Never use emoji, exclamation marks, or bold text", "confidence": 0.97},
+    {"text": "Name people in lowercase first names only: john, priya, lena, sam", "confidence": 0.9},
+    {"text": "Reference issues by bare key, e.g. NW-104, with no link and no 'ticket' prefix", "confidence": 0.88},
+    {"text": "Delegated work stays in 'in flight:' and names who it went to", "confidence": 0.86},
+    {"text": "Risks are stated flatly, no mitigation theater, no reassurance", "confidence": 0.9},
+    {"text": "End with the signoff on its own line: shout if you want detail.", "confidence": 0.99},
+    {"text": "No greeting, no 'hi dana', no preamble before the first header", "confidence": 0.93},
+    {"text": "PR descriptions use the headers what:, why:, risk:, testing: and keep the same signoff", "confidence": 0.84}
+  ],
+  "lexicon": {
+    "favored": [
+      "shipped",
+      "in flight",
+      "shout if",
+      "landed",
+      "closed",
+      "no drift",
+      "flat",
+      "still mine",
+      "timeboxed",
+      "not started",
+      "unowned",
+      "heads-down"
+    ],
+    "banned": [
+      "excited",
+      "leverage",
+      "synergy",
+      "circle back",
+      "deep dive",
+      "unpack",
+      "align",
+      "learnings",
+      "crushed it",
+      "amazing",
+      "awesome",
+      "just wanted to",
+      "happy to report",
+      "as always",
+      "!",
+      "🚀"
+    ]
+  },
+  "structure": {
+    "headers": ["shipped:", "in flight:", "risks:"],
+    "lowercase_headers": true,
+    "bullet_marker": "- ",
+    "bullets_per_section": [2, 4],
+    "avg_sentence_words": 11,
+    "emoji_rate": 0.0,
+    "exclamation_rate": 0.0,
+    "first_person_pronoun_rate": 0.08,
+    "signoff": "shout if you want detail.",
+    "greeting": null
+  },
+  "examples": {
+    "good_bullet": "- phase 1 backfill complete, 41m rows, no drift, NW-101 closed",
+    "bad_bullet": "- Excited to share that we successfully completed a huge backfill milestone! 🚀"
+  }
+}

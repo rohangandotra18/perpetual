@@ -1,0 +1,134 @@
+[
+  {
+    "_id": "S01",
+    "user_id": "U_MAYA",
+    "kind": "weekly_update",
+    "to": "U_DANA",
+    "week_of": "2026-06-29",
+    "subject": "weekly update - week of jun 29",
+    "body": "shipped:\n- ledger v2 schema merged, three tables, write path unchanged\n- killed the duplicate payout webhook, it had been firing twice since may\n- on-call week, four pages, all of them disk\n\nin flight:\n- backfill script for legacy ledger rows, testing against a staging copy\n- settlement test suite flakes on main, not reproduced locally yet\n\nrisks:\n- backfill runtime is unknown until i size the staging copy\n- lena's checkout work will need review time from me in july\n\nshout if you want detail.",
+    "sent_at": "2026-07-03T16:38:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S02",
+    "user_id": "U_MAYA",
+    "kind": "weekly_update",
+    "to": "U_DANA",
+    "week_of": "2026-07-06",
+    "subject": "weekly update - week of jul 6",
+    "body": "shipped:\n- backfill script done, dry run over 41m rows in staging\n- reviewed and merged john's idempotency key change for payouts\n- cut the payments runbook from 40 pages to 9\n\nin flight:\n- backfill rehearsal, second pass with prod-sized data\n- flaky settlement test, still not reproduced locally\n\nrisks:\n- backfill needs a four hour window and your sign-off on timing\n- priya is out the week of the 20th, no sre cover for cutover\n\nshout if you want detail.",
+    "sent_at": "2026-07-10T16:44:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S03",
+    "user_id": "U_MAYA",
+    "kind": "weekly_update",
+    "to": "U_DANA",
+    "week_of": "2026-07-13",
+    "subject": "weekly update - week of jul 13",
+    "body": "shipped:\n- backfill rehearsal passed on prod-sized data, 3h11m, zero drift\n- ledger v2 read helpers merged behind a flag, nothing calls them yet\n- fixed the reconciliation report timezone bug, off by one day\n\nin flight:\n- phase 1 backfill scheduled for saturday the 25th, window confirmed\n- writing the rollback runbook for dual-write\n\nrisks:\n- rollback path is untested, i want a staging dry run first\n- the settlement flake is now blocking three unrelated prs\n\nshout if you want detail.",
+    "sent_at": "2026-07-17T16:31:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S04",
+    "user_id": "U_MAYA",
+    "kind": "weekly_update",
+    "to": "U_DANA",
+    "week_of": "2026-07-20",
+    "subject": "weekly update - week of jul 20",
+    "body": "shipped:\n- rollback runbook written and dry run in staging, twelve minutes end to end\n- ledger v2 read helpers now cover refunds and chargebacks\n- unblocked lena on the checkout branch, conflict was in the flag config\n\nin flight:\n- phase 1 backfill runs saturday the 25th, priya on standby\n- retry logic on the nightly reconciliation job, it never dead letters\n\nrisks:\n- if the backfill overruns we eat into the monday close\n- webhook signing key rotation still has no owner\n\nshout if you want detail.",
+    "sent_at": "2026-07-24T16:52:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S05",
+    "user_id": "U_MAYA",
+    "kind": "weekly_update",
+    "to": "U_DANA",
+    "week_of": "2026-07-27",
+    "subject": "weekly update - week of jul 27",
+    "body": "shipped:\n- phase 1 backfill complete, 41m rows, no drift, NW-101 closed\n- verified row counts against the legacy ledger twice, matched both times\n- reviewed john's payout batching change, merged monday\n\nin flight:\n- phase 2 dual-write, starts monday behind a flag\n- reconciliation retry job, still mine, still not done\n\nrisks:\n- dual-write doubles ledger write volume, i am watching db cpu\n- planning doc deadline moved up to the 14th\n\nshout if you want detail.",
+    "sent_at": "2026-07-31T16:33:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S06",
+    "user_id": "U_MAYA",
+    "kind": "weekly_update",
+    "to": "U_DANA",
+    "week_of": "2026-08-03",
+    "subject": "weekly update - week of aug 3",
+    "body": "shipped:\n- ledger migration phase 2 done, dual-write to 100% then read cutover\n- shadow reads compared 8.4m rows, 3 mismatches, all refund formatting\n- reviewed lena's checkout redesign, 14 comments, merged friday\n- closed NW-102 and NW-103\n\nin flight:\n- webhook hardening, timestamp check and replay window, NW-109\n- reconciliation retry job, delegated to john, NW-104 merged wednesday\n- flaky settlement test, delegated to john, NW-107\n\nrisks:\n- webhook signing key rotation has no owner, priya cuts over next week\n- refund formatting mismatch NW-108 is unowned and merchant visible\n- sam needs a q3 capacity estimate from me, not started\n\nshout if you want detail.",
+    "sent_at": "2026-08-07T16:39:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S07",
+    "user_id": "U_MAYA",
+    "kind": "slack_reply",
+    "to": "#incidents",
+    "week_of": null,
+    "subject": "settlement webhook 502s - root cause",
+    "body": "found it. the verifier reads the raw body, so the gateway buffers the request, and batch settlement payloads exceed the 256kb body buffer limit. the gateway 502s before the app ever sees it.",
+    "sent_at": "2026-08-11T09:22:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S08",
+    "user_id": "U_MAYA",
+    "kind": "slack_reply",
+    "to": "#payments",
+    "week_of": null,
+    "subject": "phase 2 status",
+    "body": "phase 2 is done. v2 is the read path for internal reporting as of this morning. payouts stay on v1 until phase 3.",
+    "sent_at": "2026-08-07T09:05:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S09",
+    "user_id": "U_MAYA",
+    "kind": "slack_reply",
+    "to": "#eng",
+    "week_of": null,
+    "subject": "review of pr 812",
+    "body": "left 14 comments on 812. almost all of them are the address form state machine. the rest of the PR is good.",
+    "sent_at": "2026-08-05T11:32:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S10",
+    "user_id": "U_MAYA",
+    "kind": "pr_description",
+    "to": "northwind/payments#803",
+    "week_of": null,
+    "subject": "ledger: dual-write to v2 behind ledger_v2_dual_write",
+    "body": "what:\n- every ledger entry writes to v1 and v2, flag controlled, 5 to 100 percent ramp\n- v1 stays authoritative, nothing reads v2 in this PR\n\nwhy:\n- phase 2 of the migration, NW-102\n\nrisk:\n- doubles ledger write volume, watching db cpu during the ramp\n- rollback is flipping the flag, no data to undo\n\ntesting:\n- shadow read comparison job attached, 2.1m rows, 0 mismatches\n\nshout if you want detail.",
+    "sent_at": "2026-08-04T10:18:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S11",
+    "user_id": "U_MAYA",
+    "kind": "pr_description",
+    "to": "northwind/payments#818",
+    "week_of": null,
+    "subject": "webhook: signing timestamp check and replay window",
+    "body": "what:\n- reject inbound settlement webhooks outside a 5 minute timestamp tolerance\n- track delivery ids in a replay window, replays become a no-op\n\nwhy:\n- webhook hardening, NW-109\n\nrisk:\n- clock skew on the sender side would cause rejects, tolerance is generous\n\ntesting:\n- unit tests for skew at 4, 6 and 60 minutes, plus a replayed payload\n\nshout if you want detail.",
+    "sent_at": "2026-08-10T13:58:00Z",
+    "authored_by": "human"
+  },
+  {
+    "_id": "S12",
+    "user_id": "U_MAYA",
+    "kind": "pr_description",
+    "to": "northwind/payments#821",
+    "week_of": null,
+    "subject": "gateway: raise body limit to 2mb, stream the verify body",
+    "body": "what:\n- gateway request body buffer limit goes from 256kb to 2mb\n- signature verifier consumes the body as a stream, hmac computed incrementally\n\nwhy:\n- batch settlement payloads exceeded the buffer and 502d at the ingress, NW-116\n\nrisk:\n- a larger limit means a larger memory ceiling per request, bounded by concurrency\n\ntesting:\n- replayed the 1.4mb prod payload that broke it, plus the existing verify suite\n\nshout if you want detail.",
+    "sent_at": "2026-08-11T09:40:00Z",
+    "authored_by": "human"
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "_id": "T-SEED-1",
+    "agent_id": "agent-a",
+    "task": "send my weekly update to dana",
+    "started_at": "2026-07-31T16:30:12Z",
+    "ended_at": "2026-07-31T16:33:26Z",
+    "outcome": "success",
+    "steps": [
+      {"i":0,"tool":"search_slack","args":{"query":"maya work this week","limit":8},"ok":true,"ms":420,"result_digest":"8 messages"},
+      {"i":1,"tool":"list_my_issues","args":{"state":"closed","since_days":7},"ok":true,"ms":310,"result_digest":"3 issues"},
+      {"i":2,"tool":"who_did_i_delegate","args":{"topic":null},"ok":true,"ms":265,"result_digest":"1 delegation, john"},
+      {"i":3,"tool":"get_voice_profile","args":{},"ok":true,"ms":88,"result_digest":"maya-v1, 13 rules"},
+      {"i":4,"tool":"draft_message","args":{"purpose":"weekly update to dana","bullets":["phase 1 backfill complete, 41m rows, no drift","reviewed john's payout batching change, merged monday","phase 2 dual-write starts monday behind a flag","reconciliation retry job still open"]},"ok":true,"ms":1180,"result_digest":"draft, 96 words"},
+      {"i":5,"tool":"send_message","args":{"to":"U_DANA","subject":"weekly update - week of jul 27","body":"<draft from step 4>"},"ok":true,"ms":540,"result_digest":"sent to U_DANA, S05"}
+    ]
+  },
+  {
+    "_id": "T-SEED-2",
+    "agent_id": "agent-a",
+    "task": "send my weekly update to dana",
+    "started_at": "2026-08-07T16:36:04Z",
+    "ended_at": "2026-08-07T16:39:31Z",
+    "outcome": "success",
+    "steps": [
+      {"i":0,"tool":"search_slack","args":{"query":"maya work this week","limit":8},"ok":true,"ms":455,"result_digest":"8 messages"},
+      {"i":1,"tool":"list_my_issues","args":{"state":"closed","since_days":7},"ok":true,"ms":298,"result_digest":"2 issues"},
+      {"i":2,"tool":"who_did_i_delegate","args":{"topic":null},"ok":true,"ms":241,"result_digest":"2 delegations, john"},
+      {"i":3,"tool":"get_voice_profile","args":{},"ok":true,"ms":92,"result_digest":"maya-v1, 13 rules"},
+      {"i":4,"tool":"draft_message","args":{"purpose":"weekly update to dana","bullets":["ledger migration phase 2 done, read cutover complete","shadow reads compared 8.4m rows, 3 mismatches","reviewed lena's checkout redesign, merged friday","webhook signing key rotation still has no owner"]},"ok":true,"ms":1240,"result_digest":"draft, 112 words"},
+      {"i":5,"tool":"send_message","args":{"to":"U_DANA","subject":"weekly update - week of aug 3","body":"<draft from step 4>"},"ok":true,"ms":512,"result_digest":"sent to U_DANA, S06"}
+    ]
+  }
+]

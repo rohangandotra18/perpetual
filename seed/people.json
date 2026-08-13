@@ -1,0 +1,56 @@
+[
+  {
+    "_id": "U_MAYA",
+    "name": "Maya Chen",
+    "role": "Staff Engineer",
+    "team": "Payments Core",
+    "manager_id": "U_DANA",
+    "aliases": ["maya", "maya chen", "mchen", "@maya"],
+    "blurb": "Owns the ledger migration and the settlement webhook path. Writes in lowercase, ships on Thursdays, delegates to John when she is heads-down. Has never used the word 'excited' in a work message."
+  },
+  {
+    "_id": "U_DANA",
+    "name": "Dana Okafor",
+    "role": "Engineering Director",
+    "team": "Payments",
+    "manager_id": null,
+    "aliases": ["dana", "dana okafor", "dokafor", "@dana"],
+    "blurb": "Maya's boss. Reads every weekly update and quotes them back in planning. Believes a PR open nine days is a diary entry. Prefers bad news early and short."
+  },
+  {
+    "_id": "U_JOHN",
+    "name": "John Diaz",
+    "role": "Backend Engineer",
+    "team": "Payments Core",
+    "manager_id": "U_DANA",
+    "aliases": ["john", "john diaz", "jdiaz", "@john"],
+    "blurb": "Backend engineer two years in. The person Maya hands work to when the ledger eats her week. Reliable, funny about it, would genuinely enjoy being right about a flaky test being a real bug."
+  },
+  {
+    "_id": "U_PRIYA",
+    "name": "Priya Raman",
+    "role": "Site Reliability Engineer",
+    "team": "Platform",
+    "manager_id": "U_DANA",
+    "aliases": ["priya", "priya raman", "praman", "@priya"],
+    "blurb": "SRE for payments infrastructure. Owns staging, credentials, and the gateway. Deletes documentation that lies. Will tell you the p99 moved before you notice."
+  },
+  {
+    "_id": "U_SAM",
+    "name": "Sam Whitfield",
+    "role": "Product Manager",
+    "team": "Payments",
+    "manager_id": "U_DANA",
+    "aliases": ["sam", "sam whitfield", "swhitfield", "@sam"],
+    "blurb": "PM for payments. Asks one clarifying question and then leaves you alone, which engineers regard as a superpower. Maintains a numbered list of deploy rules he cannot fully recite."
+  },
+  {
+    "_id": "U_LENA",
+    "name": "Lena Kowalski",
+    "role": "Frontend Engineer",
+    "team": "Checkout",
+    "manager_id": "U_DANA",
+    "aliases": ["lena", "lena kowalski", "lkowalski", "@lena"],
+    "blurb": "Frontend on checkout. Ships large PRs with an apology attached. Takes fourteen review comments without flinching and rewrites the thing properly the next morning."
+  }
+]

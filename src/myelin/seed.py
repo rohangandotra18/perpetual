@@ -1,0 +1,71 @@
+"""Load the seed corpus into Atlas and register the primitive tools."""
+import datetime as dt
+import json
+import pathlib
+import sys
+
+from . import embed
+from .db import db, ensure_indexes
+from .primitives import PRIMITIVE_DOCS
+
+SEED_DIR = pathlib.Path(__file__).resolve().parents[2] / "seed"
+
+
+def _load(name: str):
+    p = SEED_DIR / f"{name}.json"
+    if not p.exists():
+        print(f"  ! missing seed file {p.name}, skipping")
+        return []
+    data = json.loads(p.read_text())
+    return data if isinstance(data, list) else [data]
+
+
+def _embed_field(docs: list[dict], text_key: str, out_key: str = "embedding"):
+    texts = [d.get(text_key, "") for d in docs]
+    vecs = embed.embed(texts)
+    if vecs is None:  # Atlas Automated Embeddings handles it
+        return docs
+    for d, v in zip(docs, vecs):
+        d[out_key] = v
+    return docs
+
+
+def reset(full: bool = True):
+    d = db()
+    names = ["people", "messages", "issues", "sent_messages", "style_profile",
+             "relations", "tools", "trajectories", "events"]
+    for n in names:
+        d[n].delete_many({})
+    print("collections cleared")
+
+    def _insert(coll, docs):
+        if docs:
+            coll.insert_many(docs)
+
+    _insert(d.people, _load("people"))
+    _insert(d.messages, _embed_field(_load("messages"), "text"))
+    _insert(d.issues, _load("issues"))
+    _insert(d.sent_messages, _load("sent_messages"))
+    _insert(d.style_profile, _load("style_profile"))
+    _insert(d.relations, _load("relations"))
+    _insert(d.trajectories, _load("trajectories_seed"))
+
+    tools = []
+    for p in PRIMITIVE_DOCS:
+        tools.append({**p, "kind": "primitive", "status": "active",
+                      "fitness": {"calls": 0, "successes": 0},
+                      "born_at": dt.datetime.utcnow().isoformat(), "expires_at": None})
+    tools = _embed_field(tools, "purpose", "purpose_embedding")
+    d.tools.insert_many(tools)
+
+    print(f"seeded: {d.messages.count_documents({})} messages, "
+          f"{d.issues.count_documents({})} issues, "
+          f"{d.sent_messages.count_documents({})} sent, "
+          f"{d.relations.count_documents({})} edges, "
+          f"{d.trajectories.count_documents({})} prior trajectories, "
+          f"{d.tools.count_documents({})} tools")
+
+
+if __name__ == "__main__":
+    ensure_indexes()
+    reset(full="--keep-tools" not in sys.argv)
