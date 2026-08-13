@@ -145,6 +145,9 @@ def render(hits: dict) -> tuple[str, str]:
 
 
 def main():
+    # Kill switch — lets a session run with Perpetual fully off (the demo's control lane).
+    if os.environ.get("PERPETUAL_OFF") == "1":
+        sys.exit(0)
     try:
         payload = json.load(sys.stdin)
     except Exception:

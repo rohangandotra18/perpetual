@@ -1,0 +1,5 @@
+#!/bin/bash
+# Launch the Perpetual-connected Claude Code session.
+cd "$(dirname "$0")" || exit 1
+export ENABLE_TOOL_SEARCH=false
+exec claude --mcp-config scripts/mcp-demo.json --strict-mcp-config "$@"
