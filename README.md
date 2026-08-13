@@ -2,8 +2,6 @@
   <img src="assets/perpetual-logo-wordmark.png" alt="Perpetual" width="560">
 </p>
 
-# Perpetual
-
 **An agent whose tool list is not code. It's a `$vectorSearch` result — over a collection the agent writes to itself.**
 
 Every agent you have used ships with a fixed tool list. Someone typed those functions into a file. The agent will have exactly those tools on day 1 and on day 400. It does the same six-step chore every Thursday and it is exactly as slow on the fiftieth Thursday as on the first.
