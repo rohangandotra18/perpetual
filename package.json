@@ -1,0 +1,11 @@
+{
+  "name": "mongodb-hackathon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ping": "node scripts/ping.mjs"
+  },
+  "dependencies": {
+    "mongodb": "^6.18.0"
+  }
+}
