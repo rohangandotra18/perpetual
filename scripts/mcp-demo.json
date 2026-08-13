@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "myelin": {
+      "command": "/Users/shariquekhatri/MongoDB Hack/myelin/.venv/bin/python",
+      "args": ["/Users/shariquekhatri/MongoDB Hack/myelin/src/myelin/mcp_server.py"]
+    }
+  }
+}

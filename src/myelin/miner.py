@@ -113,7 +113,8 @@ def mine(min_support: int = MIN_SUPPORT) -> tuple[list[dict], list[dict]]:
         for r in rows:
             r["n"] = n
             r["ngram_hash"] = ngram_hash(r["ngram"])
-            r["already_compiled"] = r["ngram_hash"] in compiled
+            r["already_compiled"] = (r["ngram_hash"] in compiled or
+                                     any(_is_subsequence(r["ngram"], c) for c in compiled_ngrams))
             candidates.append(r)
             if r["support"] >= min_support and not r["already_compiled"]:
                 winners.append(r)
@@ -164,8 +165,8 @@ def _fallback_name(task: str) -> str:
 def _name_and_purpose(ngram: list[str], task: str) -> tuple[str, str]:
     """ONE llm.complete() call; deterministic fallback in mock mode / on failure."""
     fallback = (_fallback_name(task),
-                f"I automate my recurring {task or 'ritual'} by running "
-                f"{' -> '.join(ngram)} in one call.")
+                f'I handle the recurring request "{task}" end to end — I run '
+                f"{', '.join(ngram)} in a single call.")
     prompt = (
         "I am an AI agent that noticed I repeat this exact tool sequence:\n"
         f"  {' -> '.join(ngram)}\n"
@@ -325,3 +326,13 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def mine_and_compile(min_support: int = MIN_SUPPORT) -> dict | None:
+    """One-call API for the MCP server: mine, compile, and birth the top ritual.
+    Returns the born macro doc, or None if no ritual has enough support."""
+    winners, _ = mine(min_support)
+    if not winners:
+        return None
+    doc = compile_macro(winners[0])
+    return birth(doc, winners[0])

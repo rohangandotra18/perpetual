@@ -14,9 +14,9 @@ Screen layout for both: **two terminals side by side, 50/50.** Left = Agent A (d
 | **0:05–0:12** | Left: `tool_search("weekly update")` → `$vectorSearch` panel showing 4 retrieved tools with scores. First step fires: `1/6 search_slack…` | "Every turn it asks Atlas what it can do. Right now it knows seven things. So it does this the long way." |
 | **0:12–0:28** | Steps stream in with elapsed times: `2/6 list_my_issues ✓` `3/6 who_did_i_delegate ✓` `4/6 get_voice_profile ✓` `5/6 draft_message ✓` `6/6 send_message ✓` then `run complete · 6 calls · 24.8s`. Draft snippet flashes in Maya's voice. | "Six calls. Twenty-five seconds. It does this every Thursday, and every Thursday it costs the same." |
 | **0:28–0:34** | Left: `MINER: aggregating trajectories…` then a table row: `search_slack→list_my_issues→who_did_i_delegate→get_voice_profile→draft_message→send_message  support=3  success=1.00`. | "Now the miner runs — one aggregation pipeline over the agent's own logs. Same six steps, three times, always successful." |
-| **0:34–0:41** | Left: `COMPILING…` then the macro JSON scrolls, `$ref` bindings highlighted. **ElevenLabs voice line over it.** Then `INSERTED tools/weekly_update_to_boss`. Counter animates **`TOOLS KNOWN: 7 → 8`**. | *(agent voice)* "Compiling weekly_update_to_boss." — *(you)* "It named the tool. It wrote the steps. That's a document, not generated code — you can read it before it runs." |
-| **0:41–0:46** | **Right terminal lights up**, unprompted: `⚡ SKILL ACQUIRED — weekly_update_to_boss (via change stream)` and `TOOLS KNOWN: 7 → 8`. Cursor never touched it. | "Second agent, second process. Change stream. No restart, no deploy." |
-| **0:46–0:55** | Left: `> maya: send Dana my weekly update` again. One line: `weekly_update_to_boss(week="this week") ✓ 4.9s`. The sent message renders in full, in Maya's voice. Side badge: `6 calls → 1 · 25s → 5s`. | "Ask again. One call. Five seconds. Same message, her voice — the skill is in the database now, not the model." |
+| **0:34–0:41** | Left: `COMPILING…` then the macro JSON scrolls, `$ref` bindings highlighted. **ElevenLabs voice line over it.** Then `INSERTED tools/weekly_update_to_dana`. Counter animates **`TOOLS KNOWN: 7 → 8`**. | *(agent voice)* "Compiling weekly_update_to_dana." — *(you)* "It named the tool. It wrote the steps. That's a document, not generated code — you can read it before it runs." |
+| **0:41–0:46** | **Right terminal lights up**, unprompted: `⚡ SKILL ACQUIRED — weekly_update_to_dana (via change stream)` and `TOOLS KNOWN: 7 → 8`. Cursor never touched it. | "Second agent, second process. Change stream. No restart, no deploy." |
+| **0:46–0:55** | Left: `> maya: send Dana my weekly update` again. One line: `weekly_update_to_dana(week="this week") ✓ 4.9s`. The sent message renders in full, in Maya's voice. Side badge: `6 calls → 1 · 25s → 5s`. | "Ask again. One call. Five seconds. Same message, her voice — the skill is in the database now, not the model." |
 | **0:55–1:00** | Both terminals show `TOOLS KNOWN: 8`. Title card: **Myelin**. | "Agent A got the experience. Agent B got the skill." |
 
 **Capture notes:** record at 1080p minimum, terminal font ≥ 18pt, no window chrome. Let the 25-second cold run play at real speed for the first ~6 seconds, then a subtle speed-ramp to 2x through the middle steps — the slowness is the point, but 16 seconds of scrolling is not. Never speed-ramp the warm run; its shortness has to be felt in real time.
@@ -71,7 +71,7 @@ Trigger the miner. Show the aggregation result row.
 >
 > "So it compiles it."
 
-Macro JSON on screen. **ElevenLabs line plays: "Compiling weekly_update_to_boss."**
+Macro JSON on screen. **ElevenLabs line plays: "Compiling weekly_update_to_dana."**
 
 > "It picked the name. The steps and the `$ref` bindings came out of the observed trajectory — `s5.text` flows into `send_message.body` because that's what actually happened, three times. No code generation. That's a JSON document you can read, review, and delete."
 

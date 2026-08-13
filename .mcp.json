@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "myelin": {
+      "command": ".venv/bin/python",
+      "args": ["src/myelin/mcp_server.py"]
+    }
+  }
+}

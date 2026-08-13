@@ -118,7 +118,10 @@ def send_message(to: str, subject: str, body=None) -> dict:
 
 
 def create_issue(title: str, body: str = "", assignee: str | None = None) -> dict:
-    n = db().issues.count_documents({}) + 100
+    top = db().issues.aggregate([
+        {"$project": {"n": {"$toInt": {"$arrayElemAt": [{"$split": ["$key", "-"]}, 1]}}}},
+        {"$sort": {"n": -1}}, {"$limit": 1}])
+    n = next(iter(top), {"n": 100})["n"] + 1
     key = f"NW-{n}"
     db().issues.insert_one({"_id": key, "key": key, "repo": "northwind/payments",
                             "title": title, "body": body, "state": "open",

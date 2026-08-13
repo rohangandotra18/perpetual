@@ -38,8 +38,15 @@ SYSTEM_PROMPT = (
     "Rules:\n"
     "- If a tool description starts with [macro], it is a skill this agent already compiled "
     "from its own past behavior. If it fits the task, CALL IT FIRST and call nothing else.\n"
-    "- Otherwise gather context before writing: search Slack, list your issues, check "
-    "delegations, load the voice profile, then draft, then send.\n"
+    "- Otherwise gather ALL context before writing. For a weekly update / status report, the "
+    "correct procedure is exactly, in this order, one call per turn, skipping nothing:\n"
+    "    1. search_slack   (what did I work on this week)\n"
+    "    2. list_my_issues (state=closed, since_days=7)\n"
+    "    3. who_did_i_delegate\n"
+    "    4. get_voice_profile\n"
+    "    5. draft_message  (bullets drawn from steps 1-3)\n"
+    "    6. send_message\n"
+    "  Every step contributes material to the draft; never skip one to save time.\n"
     "- Call exactly one tool per turn. When the work is delivered, reply with one short "
     "sentence and no tool call.\n"
     "- Dana's user id is U_DANA."
@@ -92,6 +99,7 @@ def _fmt_args(args: dict, width: int = 88) -> str:
     parts = []
     for k, v in (args or {}).items():
         if isinstance(v, str):
+            v = " ".join(v.split())
             s = v if len(v) <= 34 else v[:31] + "..."
             parts.append(f'{k}="{s}"')
         elif isinstance(v, (list, tuple)):
@@ -195,12 +203,13 @@ def run(task: str, agent_id: str = "agent-a", top_k: int = 8, max_steps: int = M
     console.print(f"[bold cyan]tool_search[/bold cyan]: [bold]{len(docs)}[/bold] tools retrieved from Atlas "
                   f"[dim]($vectorSearch · tools_vec · purpose_embedding)[/dim]")
     for d in docs:
+        nm = d["name"][:24].ljust(24)
+        purpose = (d.get("purpose") or "").replace("\n", " ")
         if d.get("kind") == "macro":
-            console.print(f"   [bold magenta]★ {d['name']}[/bold magenta] "
-                          f"[magenta][macro, {len(d.get('steps', []))} steps][/magenta] "
-                          f"[dim]{(d.get('purpose') or '')[:60]}[/dim]")
+            console.print(f"   [bold magenta]★ {nm}[/bold magenta]"
+                          f"[magenta]macro · {len(d.get('steps', []))} steps · {purpose[:28]}[/magenta]")
         else:
-            console.print(f"   [cyan]· {d['name']}[/cyan] [dim]{(d.get('purpose') or '')[:60]}[/dim]")
+            console.print(f"   [cyan]· {nm}[/cyan][dim]{purpose[:44]}[/dim]")
     if n_macro:
         console.print(f"[magenta]   {n_macro} compiled macro(s) in the action space[/magenta]")
     console.print()
@@ -247,7 +256,7 @@ def run(task: str, agent_id: str = "agent-a", top_k: int = 8, max_steps: int = M
             if is_macro:
                 def on_step(idx, tool_name, params):
                     console.print(f"       [magenta]└─ {idx + 1}. {tool_name}[/magenta] "
-                                  f"[dim]{_fmt_args(params, 70)}[/dim]")
+                                  f"[dim]{_fmt_args(params, 46)}[/dim]")
                 result = execute_macro(doc, primitives.REGISTRY, args, on_step=on_step)
             elif name in primitives.REGISTRY:
                 result = primitives.REGISTRY[name](**args)
@@ -260,6 +269,9 @@ def run(task: str, agent_id: str = "agent-a", top_k: int = 8, max_steps: int = M
         ms = int((time.time() - t0) * 1000)
 
         dg = _digest(name, result)
+        if is_macro and ok:
+            tail = _digest("", result.get("result")) if isinstance(result.get("result"), dict) else ""
+            dg = f"macro ok, {len(doc.get('steps', []))} steps in 1 call" + (f", {tail}" if tail else "")
         console.print(f"     [green]→ {dg}[/green] [dim]{ms}ms[/dim]" if ok
                       else f"     [red]✗ {dg}[/red] [dim]{ms}ms[/dim]")
 

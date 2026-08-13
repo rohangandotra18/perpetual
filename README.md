@@ -45,7 +45,7 @@ flowchart TB
     TR --> MINER["miner: aggregation pipeline<br/>n-gram over ordered steps<br/>support >= 3, success rate = 1.0"]
     MINER --> NAME["OpenRouter: name + write purpose"]
     NAME -->|insert macro doc| TOOLS
-    NAME --> VOICE["ElevenLabs: 'compiling weekly_update_to_boss'"]
+    NAME --> VOICE["ElevenLabs: 'compiling weekly_update_to_dana'"]
 
     TOOLS -->|change stream watch| B["Agent B — second terminal<br/>SKILL ACQUIRED"]
 
@@ -70,7 +70,7 @@ This is the whole thesis. `tool_search(intent)` runs `$vectorSearch` against `to
 People, projects, issues and channels are nodes in `entities`; `relations` holds typed edges (`delegated_to`, `owns`, `reports_to`, `mentioned_in`). `who_did_i_delegate(topic)` is a `$graphLookup` from Maya out through `delegated_to` edges up to depth 3, so "who did I hand the reconciliation work to?" resolves to John Diaz *and* the issue he opened downstream — a multi-hop answer a flat lookup can't give.
 
 **4. Change streams — *skill transfer***
-Agent B runs `db.tools.watch([{ $match: { operationType: "insert", "fullDocument.kind": "macro" }}])`. The macro document is fully self-describing (steps + bindings + purpose), so B doesn't fetch code — it receives the tool. On stage, B's terminal prints `SKILL ACQUIRED: weekly_update_to_boss` while A's insert cursor is still warm. This is the moment the demo exists for.
+Agent B runs `db.tools.watch([{ $match: { operationType: "insert", "fullDocument.kind": "macro" }}])`. The macro document is fully self-describing (steps + bindings + purpose), so B doesn't fetch code — it receives the tool. On stage, B's terminal prints `SKILL ACQUIRED: weekly_update_to_dana` while A's insert cursor is still warm. This is the moment the demo exists for.
 
 **5. TTL + fitness counters — *bad tools die***
 Every macro carries `expires_at` and `stats {invocations, successes}`. Successful use pushes `expires_at` forward; neglect lets Mongo's TTL monitor delete it. A macro whose success rate falls below threshold is demoted to `status: "quarantined"`, which the vector index filters out — it stops being retrievable, therefore stops being a tool. Natural selection over the action space, implemented with an index option.
@@ -113,7 +113,7 @@ Here is the real document born on stage, compiled from the 6-step ritual Maya ke
 
 ```json
 {
-  "name": "weekly_update_to_boss",
+  "name": "weekly_update_to_dana",
   "kind": "macro",
   "status": "active",
   "purpose": "Compile Maya's weekly status update — recent channel activity, issues she closed, and work she delegated — into a message written in her own voice and send it to her manager.",
@@ -191,7 +191,7 @@ python -m myelin.demo agent-a
 python -m myelin.demo agent-b
 ```
 
-Terminal 1 runs the ritual cold, mines it, compiles `weekly_update_to_boss`, watches `TOOLS KNOWN` tick 7 → 8, then runs it warm as one call. Terminal 2 never restarts and gains the tool anyway.
+Terminal 1 runs the ritual cold, mines it, compiles `weekly_update_to_dana`, watches `TOOLS KNOWN` tick 7 → 8, then runs it warm as one call. Terminal 2 never restarts and gains the tool anyway.
 
 ```bash
 make reset      # drop learned macros + trajectories, keep the seeded workplace

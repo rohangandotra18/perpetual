@@ -36,7 +36,7 @@ VECTOR_DIMS = int(os.environ.get("EMBED_DIMS", "768"))
 
 def ensure_indexes():
     d = db()
-    for name in ("tools", "trajectories", "runs", "messages", "relations", "people"):
+    for name in ("tools", "trajectories", "runs", "messages", "relations", "people", "events"):
         if name not in d.list_collection_names():
             d.create_collection(name)
 
