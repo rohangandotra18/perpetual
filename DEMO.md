@@ -156,3 +156,7 @@ Run this in order, finishing no less than 5 minutes before you go up.
 - Miner finds support 2 not 3 → you forgot the seeded prior runs; run `make reset` (which reseeds them) and rerun.
 - Agent B doesn't light up → do **not** restart it on stage. Cut to the capture for that beat, then come back live for the warm run.
 - LLM call times out on the naming step → the macro still compiles with a fallback name; say "it fell back to a deterministic name, the steps are the part that matters" and move on.
+
+## Claude Code coda (verified 2:42 PM)
+
+Real Claude Code sessions connect to the Myelin MCP server (`--mcp-config scripts/mcp-demo.json --strict-mcp-config`, `ENABLE_TOOL_SEARCH=false`) and call Myelin tools against live Atlas. **Verified two-turn birth flow:** turn 1 — ask Claude to call `compile_ritual` (births the macro, counter 7→8); turn 2 — ask again and `weekly_update_to_dana` is in its tool list and executes end-to-end (386-char update sent). Script the coda as two prompts, not one: same-turn visibility loses the refresh race (confirmed empirically); next-prompt visibility is reliable. No session restart needed.
