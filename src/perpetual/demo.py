@@ -22,7 +22,7 @@ from rich.table import Table
 from rich.text import Text
 
 from . import seed as seed_mod
-from .db import db, ensure_indexes
+from .db import db, ensure_indexes, index_queryable
 from .llm import RITUAL
 
 console = Console()
@@ -247,14 +247,6 @@ def cmd_birth_check(_args) -> int:
     return 0
 
 
-def _index_queryable(coll, idx_name: str) -> bool:
-    """True only if Atlas reports this search index as queryable — not a collection scan."""
-    for info in coll.list_search_indexes():
-        if info.get("name") == idx_name:
-            return bool(info.get("queryable"))
-    return False
-
-
 def cmd_warmup(_args) -> int:
     header("PERPETUAL — WARMUP", "ping Atlas + vector indexes", INFO)
     from . import primitives
@@ -267,10 +259,12 @@ def cmd_warmup(_args) -> int:
         ("memories_vec", "memories", "embedding", "button spec", None),
         ("messages_vec", "messages", "embedding", "ledger", None),
     ]
+    # Empty memories is normal after reset; the others must retrieve.
+    must_hit = {"tools", "skills", "messages"}
     failed = 0
     for idx, coll, path, q, flt in probes:
         try:
-            if not _index_queryable(d[coll], idx):
+            if not index_queryable(d[coll], idx):
                 console.print(f"[yellow]! {idx} not queryable yet[/]")
                 failed += 1
                 continue
@@ -281,7 +275,8 @@ def cmd_warmup(_args) -> int:
         try:
             qv = primitives._query_vector(q)
         except Exception as e:
-            console.print(f"[{OK}]✓ {idx} queryable[/] [yellow]! embed failed ({type(e).__name__}: {e})[/]")
+            console.print(f"[yellow]! {idx} queryable but embed failed ({type(e).__name__}: {e})[/]")
+            failed += 1
             continue
         if qv is None:
             console.print(f"[{OK}]✓ {idx} queryable[/] [{DIM}](no client vector — EMBED_PROVIDER=auto)[/]")
@@ -292,6 +287,10 @@ def cmd_warmup(_args) -> int:
             if flt:
                 stage["$vectorSearch"]["filter"] = flt
             hits = list(d[coll].aggregate([stage]))
+            if coll in must_hit and len(hits) == 0:
+                console.print(f"[yellow]! {idx} queryable but 0 hits — Act 1 retrieval will miss[/]")
+                failed += 1
+                continue
             console.print(f"[{OK}]✓ {idx} queryable ({len(hits)} hits)[/]")
         except Exception as e:
             console.print(f"[yellow]! {idx} flag is queryable but $vectorSearch failed: "

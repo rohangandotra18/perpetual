@@ -8,7 +8,16 @@ from . import embed
 from .db import db, ensure_indexes
 from .primitives import PRIMITIVE_DOCS
 
-SEED_DIR = pathlib.Path(__file__).resolve().parents[2] / "seed"
+
+def _repo_root() -> pathlib.Path:
+    here = pathlib.Path(__file__).resolve()
+    for p in [here.parent, *here.parents]:
+        if (p / "seed").is_dir() and (p / "pyproject.toml").exists():
+            return p
+    return here.parents[2]
+
+
+SEED_DIR = _repo_root() / "seed"
 
 
 def _load(name: str):

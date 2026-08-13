@@ -318,7 +318,7 @@ Finish no less than five minutes before you go up.
 > That's the fun failure mode: retrieval quality becomes agent capability, so a badly written `purpose` makes a good tool invisible. TTL and fitness are the pressure valve. Next thing we'd build is dedup at compile time — vector-search the existing macros before inserting a near-duplicate — and generalizing macros over their `input_schema` instead of minting one per variation.
 
 **"Can macros call macros?"**
-> Structurally yes — the executor resolves any name in the registry and retrieved macros are in the registry. We kept the demo to primitives so the JSON fits on a slide. A recursion depth cap is the obvious guard.
+> Not in this build. `execute_macro` only looks up names in the primitive registry — a step whose `tool` is another macro raises `unknown primitive`. Linear primitive sequences are the 80% case and the JSON stays auditable. Nested macros are an obvious next step, with a recursion depth cap.
 
 **"Isn't this just RAG over a notes file?"**
 > Act 0 is, roughly — and that part is table stakes, which is why it's only the first minute. Act 1 is the claim: the thing being retrieved isn't a note, it's an *executable tool the agent wrote about itself*, and retrieving it is what makes it callable. The tool list is a query result. That's the part you can't do with a notes file.

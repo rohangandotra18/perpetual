@@ -20,6 +20,16 @@ def mock_mode() -> bool:
     return os.environ.get("PERPETUAL_MOCK") == "1" or not os.environ.get("GEMINI_API_KEY")
 
 
+def _parse_tool_args(raw) -> dict:
+    if isinstance(raw, dict):
+        return raw
+    try:
+        args = json.loads(raw or "{}")
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    return args if isinstance(args, dict) else {}
+
+
 def chat(messages: list[dict], tools: list[dict] | None = None,
          model: str | None = None, temperature: float = 0.0) -> dict:
     """Returns {"content": str|None, "tool_call": {"name":..., "args": {...}}|None}."""
@@ -42,7 +52,7 @@ def chat(messages: list[dict], tools: list[dict] | None = None,
     tc = None
     if msg.get("tool_calls"):
         c = msg["tool_calls"][0]
-        tc = {"name": c["function"]["name"], "args": json.loads(c["function"]["arguments"] or "{}")}
+        tc = {"name": c["function"]["name"], "args": _parse_tool_args(c["function"].get("arguments"))}
     return {"content": msg.get("content"), "tool_call": tc}
 
 
@@ -72,7 +82,7 @@ def _mock(messages: list[dict], tools: list[dict]) -> dict:
         "draft_message": {"purpose": "weekly update to dana",
                           "bullets": ["ledger migration phase 2", "webhook hardening",
                                       "delegations status", "closed issues"]},
-        "send_message": {"to": "U_DANA", "subject": "weekly update", "body": {"$last_draft": True}},
+        "send_message": {"to": "U_DANA", "subject": "weekly update"},
     }
     for step in RITUAL:
         if step not in done and step in available:

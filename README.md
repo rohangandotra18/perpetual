@@ -79,7 +79,7 @@ flowchart TB
     EX -->|every step appended| TR[("trajectories")]
     TS -.->|top-k = the action space| TOOLS[("tools<br/>primitives + macros<br/>vector index on purpose")]
 
-    TR --> MINER["miner: aggregation pipeline<br/>n-gram over ordered steps<br/>support >= 3, success rate = 1.0"]
+    TR --> MINER["miner: aggregation pipeline<br/>$setWindowFields n-grams<br/>support >= 3"]
     MINER --> NAME["Gemini: name + write purpose"]
     NAME -->|insert macro doc| TOOLS
     NAME --> VOICE["ElevenLabs: 'compiling weekly_update_to_dana'"]
@@ -154,39 +154,30 @@ Here is the real document born on stage, compiled from the 6-step ritual Maya ke
   "kind": "macro",
   "status": "active",
   "purpose": "Compile Maya's weekly status update — recent channel activity, issues she closed, and work she delegated — into a message written in her own voice and send it to her manager.",
-  "input_schema": {
-    "type": "object",
-    "properties": {
-      "week": {"type": "string", "description": "e.g. 'this week'"},
-      "to":   {"type": "string", "default": "U_DANA"}
-    },
-    "required": ["week"]
-  },
+  "input_schema": {"type": "object", "properties": {"note": {"type": "string"}}, "required": []},
   "steps": [
-    {"tool": "search_slack",       "params": {"query": {"$ref": "input.week"}, "limit": 25},        "save_as": "s1"},
-    {"tool": "list_my_issues",     "params": {"state": "closed", "since_days": 7},                  "save_as": "s2"},
-    {"tool": "who_did_i_delegate", "params": {},                                                    "save_as": "s3"},
-    {"tool": "get_voice_profile",  "params": {},                                                    "save_as": "s4"},
-    {"tool": "draft_message",      "params": {"purpose": "weekly update for my manager",
-                                              "bullets": [{"$ref": "s1.highlights"},
-                                                          {"$ref": "s2.issues"},
-                                                          {"$ref": "s3.delegations"}],
-                                              "voice":   {"$ref": "s4.profile"}},                   "save_as": "s5"},
-    {"tool": "send_message",       "params": {"to":      {"$ref": "input.to"},
-                                              "subject": "Weekly update",
-                                              "body":    {"$ref": "s5.text"}}}
+    {"tool": "search_slack",       "params": {"query": "maya work this week", "limit": 8}, "save_as": "s0"},
+    {"tool": "list_my_issues",     "params": {"state": "closed", "since_days": 7},          "save_as": "s1"},
+    {"tool": "who_did_i_delegate", "params": {},                                          "save_as": "s2"},
+    {"tool": "get_voice_profile",  "params": {},                                          "save_as": "s3"},
+    {"tool": "draft_message",      "params": {"purpose": "weekly update to dana",
+                                             "bullets": ["ledger migration phase 2 done",
+                                                         "webhook hardening"]},           "save_as": "s4"},
+    {"tool": "send_message",       "params": {"to": "U_DANA",
+                                             "subject": "weekly update",
+                                             "body": {"$ref": "s4.text"}}}
   ],
-  "guard": {"$ref": "s4.profile.ready", "equals": true},
+  "guard": null,
   "fitness": {"calls": 0, "successes": 0},
   "born_at": "2026-08-13T16:41:07Z",
-  "born_from_run": "run_8f21c",
-  "expires_at": "2026-09-12T16:41:07Z"
+  "born_from": {"trajectory_ids": ["T-SEED-1", "T-SEED-2", "T-LIVE"], "ngram_hash": "…"},
+  "expires_at": "2026-08-20T16:41:07Z"
 }
 ```
 
-`{"$ref": "s2.issues"}` means *"the `issues` field of whatever step `s2` returned"*. Refs resolve against a context dict holding `input` plus each `save_as`; dotted paths walk dicts and list indices. `guard` is an optional precondition — if it fails the macro refuses to run rather than sending a half-built message.
+`{"$ref": "s4.text"}` means *"the `text` field of whatever step `s4` returned"*. Refs resolve against a context dict holding `input` plus each `save_as`; dotted paths walk dicts and list indices. `guard` is optional — checked as soon as its `$ref` is resolvable, so it can stop a later `send_message` rather than failing before any step runs.
 
-The LLM's only job in compilation is **naming and writing the `purpose`** (via Gemini). The *steps and bindings are derived mechanically* from the mined trajectory — which parameter came from which prior step is observed fact, not a guess. That's why this is safe enough to run live.
+The LLM's only job in compilation is **naming and writing the `purpose`** (via Gemini). The *steps are copied from the mined trajectory*. The one binding we rewrite from observed dataflow is `send_message.body ← draft_message.text`; other args stay as literals from the exemplar run. That's why this is safe enough to run live.
 
 ---
 
@@ -233,8 +224,9 @@ Terminal 1 runs the ritual cold, mines it, compiles `weekly_update_to_dana`, wat
 
 ```bash
 make reset      # drop learned macros + trajectories, reseed workplace (PYTHONPATH=src)
-make warmup     # ping Atlas + each vector index
+make warmup     # ping Atlas + each vector index; fails if an index isn't queryable
 make demo       # reset, warmup, status, birth-check
+make test       # offline unit tests (no Atlas required)
 ```
 
 ---

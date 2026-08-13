@@ -107,26 +107,30 @@ def render(hits: dict) -> tuple[str, str]:
     """-> (context injected into the model, one-line banner shown to the user)"""
     blocks, badges = [], []
 
-    skills = [s for s in hits["skills"] if s.get("score", 0) >= MIN_SCORE]
+    skills = [s for s in hits.get("skills") or [] if s.get("score", 0) >= MIN_SCORE]
     if len(skills) > 1:  # avoid dragging in a loosely-related second convention
         skills = [s for s in skills if s.get("score", 0) >= skills[0].get("score", 0) - MARGIN]
     if skills:
         badges.append(f"{len(skills)} skill" + ("s" if len(skills) > 1 else ""))
         for s in skills:
             how = "vector + trigger match" if s.get("lexical") else "vector"
-            blocks.append(f"### Team convention — {s['title']} (relevance {s['score']:.2f}, {how})\n{s['body']}")
+            title = s.get("title") or s.get("name") or "skill"
+            blocks.append(
+                f"### Team convention — {title} (relevance {s.get('score', 0):.2f}, {how})\n"
+                f"{s.get('body', '')}"
+            )
 
-    mems = [m for m in hits["memories"] if m.get("score", 0) >= MIN_SCORE]
+    mems = [m for m in hits.get("memories") or [] if m.get("score", 0) >= MIN_SCORE]
     if mems:
         badges.append(f"{len(mems)} memor" + ("ies" if len(mems) > 1 else "y"))
-        lines = [f"- [{m.get('topic', 'general')}, saved {str(m.get('saved_at', ''))[:10]}] {m['content']}"
+        lines = [f"- [{m.get('topic', 'general')}, saved {str(m.get('saved_at', ''))[:10]}] {m.get('content', '')}"
                  for m in mems]
         blocks.append("### Decisions already made in past sessions\n" + "\n".join(lines))
 
-    macros = [t for t in hits["macros"] if t.get("score", 0) >= MIN_SCORE]
+    macros = [t for t in hits.get("macros") or [] if t.get("score", 0) >= MIN_SCORE]
     if macros:
         badges.append(f"{len(macros)} compiled skill" + ("s" if len(macros) > 1 else ""))
-        lines = [f"- `{t['name']}` — {t['purpose']} (compiled by an agent from repeated behavior)"
+        lines = [f"- `{t.get('name', '?')}` — {t.get('purpose', '')} (compiled by an agent from repeated behavior)"
                  for t in macros]
         blocks.append("### Skills this agent compiled itself — prefer these over doing the steps manually\n"
                       + "\n".join(lines))
@@ -163,7 +167,10 @@ def main():
     if "hits" not in result:
         sys.exit(0)  # slow or failed — never block the prompt
 
-    context, banner = render(result["hits"])
+    try:
+        context, banner = render(result["hits"])
+    except Exception:
+        sys.exit(0)
     if not context:
         sys.exit(0)
     print(json.dumps({

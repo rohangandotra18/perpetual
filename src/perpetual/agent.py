@@ -254,7 +254,7 @@ def run(task: str, agent_id: str = "agent-a", top_k: int = 12, max_steps: int = 
                                   f"[dim]{_fmt_args(params, 46)}[/dim]")
                 result = execute_macro(doc, primitives.REGISTRY, args, on_step=on_step)
             elif name in primitives.REGISTRY:
-                result = primitives.REGISTRY[name](**args)
+                result = primitives.invoke(name, args)
             else:
                 raise KeyError(f"tool '{name}' is not in the retrieved action space")
         except (MacroError, Exception) as e:  # noqa: B014 - demo resilience

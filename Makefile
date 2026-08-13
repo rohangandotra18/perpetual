@@ -1,4 +1,4 @@
-.PHONY: reset demo warmup
+.PHONY: reset demo warmup test
 
 export PYTHONPATH := src
 PYTHON ?= $(firstword $(wildcard .venv/bin/python) python3)
@@ -12,3 +12,6 @@ warmup:
 demo: reset warmup
 	$(PYTHON) -m perpetual.demo status
 	$(PYTHON) -m perpetual.demo birth-check
+
+test:
+	$(PYTHON) -m unittest discover -s tests -v

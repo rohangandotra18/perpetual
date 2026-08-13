@@ -75,10 +75,9 @@ def call_tool(name: str, args: dict) -> str:
         result = macro.execute_macro(doc, primitives.REGISTRY, args or {})
         db().tools.update_one({"name": name}, {"$inc": {"fitness.calls": 1, "fitness.successes": 1}})
         return json.dumps(result["result"], default=str)[:4000]
-    fn = primitives.REGISTRY.get(name)
-    if fn is None:
+    if name not in primitives.REGISTRY:
         raise ValueError(f"unknown tool {name}")
-    return json.dumps(fn(**(args or {})), default=str)[:4000]
+    return json.dumps(primitives.invoke(name, args or {}), default=str)[:4000]
 
 
 def watch_external_births():
